@@ -1,0 +1,26 @@
+# flake8 (wemake-python-styleguide, WPS) + per-file-ignores.
+# Copy to <project>/app/setup.cfg.
+# ⛔ Under the guard once wired in — per-file-ignores is the "I'll just add an ignore" loophole,
+#    so edits go through the owner's key + an entry in the debt journal (RATCHET).
+
+[flake8]
+# The same width as ruff: two different widths give endless editing of the same file.
+max-line-length = 80
+# WPS gives a strict baseline. We disable only what is incompatible with ruff/the formatter,
+# and that deliberately. Every new ignore below is new debt, with a justification.
+extend-select = WPS
+# flake8 does NOT respect .gitignore (unlike ruff) — venv/caches are excluded explicitly, otherwise site-packages gets linted.
+extend-exclude = .venv,build,dist,.git,__pycache__,.mypy_cache,.pytest_cache,.ruff_cache
+per-file-ignores =
+    # tests: a CASE docstring is mandatory (pyproject drops only D100/D104 — module and package),
+    # we allow "magic" numbers and strings and assert.
+    tests/*.py: WPS226,WPS432,S101,WPS118
+    tests/**/*.py: WPS226,WPS432,S101,WPS118
+    # example: Django migrations need not comply with WPS
+    #   **/migrations/*.py: WPS102,WPS114,WPS432
+    # example: __init__.py assembles the package's public API
+    #   **/__init__.py: WPS201,F401
+
+# codespell reads this section itself: do not check venv/caches/binaries.
+[codespell]
+skip = .venv,.git,*.lock,*.svg,*.min.js,build,dist,.mypy_cache,.pytest_cache,.ruff_cache

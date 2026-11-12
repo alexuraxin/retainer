@@ -1,0 +1,1464 @@
+<meta charset="utf-8">
+<title>retainer · settings</title>
+<style>
+  :root {
+    --ground: #eceef1; --surface: #ffffff; --surface-2: #f4f5f7;
+    --ink: #1a1d23; --muted: #5d6675; --faint: #8b93a1;
+    --line: rgba(26,29,35,.12); --line-2: rgba(26,29,35,.06);
+    --accent: #b26a12; --accent-soft: rgba(178,106,18,.12);
+    --on: #2f7d54; --on-soft: rgba(47,125,84,.13);
+    --lock: #b0483d; --lock-soft: rgba(176,72,61,.10);
+    --off: #97a0af;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --shadow: 0 1px 2px rgba(16,20,26,.06), 0 8px 24px rgba(16,20,26,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0f1319; --surface: #171c24; --surface-2: #1d232d;
+      --ink: #e7eaef; --muted: #9aa4b3; --faint: #6b7482;
+      --line: rgba(231,234,239,.11); --line-2: rgba(231,234,239,.05);
+      --accent: #e0932f; --accent-soft: rgba(224,147,47,.14);
+      --on: #59b483; --on-soft: rgba(89,180,131,.14);
+      --lock: #d16b60; --lock-soft: rgba(209,107,96,.13);
+      --off: #6b7482;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0f1319; --surface: #171c24; --surface-2: #1d232d;
+    --ink: #e7eaef; --muted: #9aa4b3; --faint: #6b7482;
+    --line: rgba(231,234,239,.11); --line-2: rgba(231,234,239,.05);
+    --accent: #e0932f; --accent-soft: rgba(224,147,47,.14);
+    --on: #59b483; --on-soft: rgba(89,180,131,.14);
+    --lock: #d16b60; --lock-soft: rgba(209,107,96,.13); --off: #6b7482;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--sans); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: clamp(16px, 4vw, 48px); }
+  code { font-family: var(--mono); font-size: .92em; }
+
+  /* ── header ── */
+  header { display: flex; flex-wrap: wrap; gap: 20px 40px; align-items: flex-end; justify-content: space-between; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
+  h1 { font-size: clamp(28px, 4.4vw, 40px); line-height: 1.06; margin: 0; letter-spacing: -.02em; text-wrap: balance; font-weight: 680; }
+  .lede { color: var(--muted); max-width: 60ch; margin: 14px 0 0; font-size: 15.5px; text-wrap: pretty; }
+
+  /* ── the two layers and the band between them ── */
+  .layer { margin-top: 40px; }
+  .layer-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; padding-bottom: 12px; border-bottom: 2px solid var(--ink); }
+  .layer-title { font-size: 20px; font-weight: 650; letter-spacing: -.01em; margin: 0; }
+  .layer-note { color: var(--muted); font-size: 14px; margin: 0; }
+  .band {
+    margin-top: 48px; padding: 18px 20px; border-radius: 14px; background: var(--surface);
+    border: 1px solid var(--line); border-left: 4px solid var(--accent); box-shadow: var(--shadow);
+    display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; scroll-margin-top: 16px;
+  }
+  @media (min-width: 760px) { .band { grid-template-columns: minmax(0,1fr) minmax(260px,360px); align-items: center; } }
+  .band .layer-note { max-width: 58ch; margin-top: 4px; text-wrap: pretty; }
+  .band select { width: 100%; font-family: var(--mono); font-size: 13px; background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; }
+  .band select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .pstate { margin-top: 7px; min-height: 16px; font-family: var(--mono); font-size: 11.5px; color: var(--faint); overflow-wrap: anywhere; }
+
+  .grid { display: grid; grid-template-columns: 1fr; gap: 28px; margin-top: 24px; }
+  @media (min-width: 940px) { .grid { grid-template-columns: minmax(0,1fr) 360px; align-items: start; } }
+  .grid > * { min-width: 0; }
+  .col > section + section { margin-top: 24px; }
+  .sec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0 0 12px; }
+  .sec-head h2 { font-size: 13px; font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase; margin: 0; color: var(--ink); }
+  .sec-head .note { font-size: 12.5px; color: var(--faint); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 13px; padding: 16px 18px; box-shadow: var(--shadow); margin-bottom: 12px; }
+  .card .key { font-family: var(--mono); font-size: 14px; font-weight: 600; letter-spacing: -.01em; overflow-wrap: anywhere; }
+  .card .what { color: var(--muted); font-size: 13.5px; margin-top: 2px; max-width: 68ch; text-wrap: pretty; }
+  .card.info { background: var(--surface-2); border-color: var(--line-2); box-shadow: none; }
+  .sep { border-top: 1px solid var(--line-2); padding-top: 12px; margin-top: 12px; }
+  .rows { display: grid; gap: 14px; }
+  .legend { display: grid; gap: 5px; }
+  .legend > div { max-width: 68ch; }
+
+  /* text field */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field input { font-family: var(--mono); font-size: 13.5px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; width: 100%; }
+  .field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .field .hint { font-size: 12.5px; color: var(--faint); overflow-wrap: anywhere; }
+  .keymono { font-family: var(--mono); font-size: 11.5px; font-weight: 400; color: var(--faint); }
+  .badge { font-family: var(--mono); font-size: 10.5px; padding: 1px 7px; border-radius: 999px; white-space: nowrap; vertical-align: 1px; }
+  .badge.live { background: var(--on-soft); color: var(--on); }
+  .badge.dead { background: rgba(151,160,175,.16); color: var(--faint); }
+
+  /* segmented */
+  .seg-row { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
+  .seg-row > div:first-child { flex: 1 1 260px; min-width: 0; }
+  .segmented { display: inline-flex; flex-wrap: wrap; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .segmented label { position: relative; }
+  .segmented input { position: absolute; opacity: 0; }
+  .segmented span { display: block; font-family: var(--mono); font-size: 12.5px; padding: 5px 13px; border-radius: 999px; color: var(--muted); cursor: pointer; transition: color 200ms, background 200ms; white-space: nowrap; }
+  .segmented span:hover { color: var(--ink); background: var(--surface); }
+  .segmented input:checked + span { background: var(--accent); color: #fff; }
+  .segmented input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* Gates of ask and confirm: the pills carry phrases, not value names — the monospace key font would
+     lie here; wording shows that the position is read by meaning, not by the config key. */
+  .segmented.words span { font-family: inherit; font-size: 13px; padding: 5px 14px; }
+
+  /* what a marathon makes of `ask`, shown only while marathon is chosen */
+  .marathon { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); display: grid; gap: 6px; font-size: 13px; color: var(--ink); }
+  .marathon[hidden] { display: none; }
+  .marathon .mnote { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; }
+
+  /* ── project layer: a card is a grid with the control on the right ── */
+  .proj-layer .card { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 18px; align-items: center; }
+  .proj-layer .card .what { grid-column: 1; }
+  .proj-layer .card .catches { grid-column: 1 / -1; font-size: 12.5px; color: var(--faint); margin-top: 2px; max-width: 76ch; text-wrap: pretty; }
+  .proj-layer .card .catches b { color: var(--muted); font-weight: 600; }
+  .proj-layer .card.seg { grid-template-columns: minmax(0,1fr); }
+  .ctrl { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+  .card.locked { border-color: var(--line-2); background: var(--surface-2); box-shadow: none; }
+  .chip { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .chip.lock { color: var(--lock); background: var(--lock-soft); }
+  .chip.lock::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--lock); }
+  /* the step needs the key to be DECLARED: without the key in the config it stays silent, and the runner default "on" does not
+        enable it. The mark sits at the key, not instead of the toggle: the toggle still turns the step. */
+  .chip.undeclared { color: var(--accent); background: var(--accent-soft); font-size: 10.5px; margin-left: 9px; vertical-align: 2px; }
+
+  /* gauge */
+  .gauge { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+  .gauge .num { font-family: var(--mono); font-size: 30px; font-weight: 600; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .gauge .num b { color: var(--accent); }
+  .gauge .num span { color: var(--faint); font-size: 18px; }
+  .gauge .cap { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .bars { display: flex; gap: 3px; flex: 1 1 200px; }
+  .bars i { height: 6px; flex: 1; border-radius: 2px; background: var(--line); transition: background 250ms; }
+  .bars i.lit { background: var(--accent); }
+
+  /* toggle switch */
+  .switch { position: relative; display: inline-block; width: 46px; height: 26px; flex: none; }
+  .switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .track { position: absolute; inset: 0; border-radius: 999px; background: var(--line); border: 1px solid var(--line); transition: background 200ms; }
+  .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform 200ms; }
+  .switch input:checked + .track { background: var(--on); border-color: var(--on); }
+  .switch input:checked + .track::after { transform: translateX(20px); }
+  .switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .stack-off { opacity: .62; }
+
+  /* ── aside: config preview ── */
+  aside { position: sticky; top: 20px; }
+  .console { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+  .console .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 10px; padding: 11px 14px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+  .console .bar .path { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .console .bar .acts { display: flex; gap: 8px; flex-shrink: 0; }
+  .console pre { margin: 0; padding: 16px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; tab-size: 2; color: var(--ink); }
+  .console pre .k { color: var(--accent); }
+  .console pre .v, .console pre .v-on { color: var(--on); }
+  .console pre .v-off { color: var(--off); }
+  .console pre .c { color: var(--faint); }
+  .copy { font-family: var(--mono); font-size: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 5px 12px; border-radius: 8px; cursor: pointer; transition: border-color 200ms, color 200ms; }
+  .copy:hover { border-color: var(--accent); color: var(--accent); }
+  .copy:active { transform: translateY(1px); }
+  .copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .copy.primary { border-color: var(--accent); color: var(--accent); }
+  .copy[disabled] { opacity: .45; cursor: not-allowed; border-color: var(--line); color: var(--muted); }
+  .copy[disabled]:hover { border-color: var(--line); color: var(--muted); }
+  .aside-note { font-size: 12.5px; color: var(--faint); margin: 14px 2px 0; line-height: 1.6; overflow-wrap: anywhere; }
+
+  footer { margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--faint); font-size: 12.5px; line-height: 1.6; overflow-wrap: anywhere; }
+  footer code { color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  .lang { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
+  .lang-btn { font: 600 12px/1 var(--mono); letter-spacing: .08em; color: var(--muted); background: none; border: 0; border-radius: 7px; padding: 7px 10px; cursor: pointer; transition: background 200ms, color 200ms; }
+  .lang-btn:hover { color: var(--ink); background: var(--surface); }
+  .lang-btn:active { transform: translateY(1px); }
+  .lang-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .lang-btn[aria-pressed="true"] { color: var(--ink); background: var(--surface); box-shadow: var(--shadow); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">retainer · settings</p>
+      <h1><span>Settings</span></h1>
+      <p class="lede">The upper part applies to every project. The lower part belongs to one project, the one you pick in the bar between them.</p>
+    </div>
+    <div class="lang" role="group" aria-label="Page language">
+      <button type="button" class="lang-btn" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" class="lang-btn" data-lang="ru" aria-pressed="false">RU</button>
+    </div>
+  </header>
+
+  <!-- ═════════════ LAYER 1: COMMON TO ALL PROJECTS ═════════════ -->
+  <section class="layer" id="common">
+    <div class="layer-head"><h2 class="layer-title">For all projects</h2><p class="layer-note">One file in your home folder; every project reads it.</p></div>
+    <div class="grid">
+      <div class="col">
+        <!-- TRACKER -->
+        <section>
+          <div class="sec-head"><h2>Task tracker</h2><span class="note">where tasks and incidents go</span></div>
+          <div class="card">
+            <div class="field">
+              <div class="key"><span>Tracker address</span> <span class="keymono">tracker_url</span> <span class="badge live">works</span></div>
+              <input id="tracker_url" value="http://localhost:3000" spellcheck="false">
+              <div class="hint">Your Gitea. Tasks, pull requests and incident reports are filed here.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="field">
+              <div class="key"><span>Inbox repository</span> <span class="keymono">tracker_repo</span> <span class="badge live">works</span></div>
+              <input id="tracker_repo" value="owner/repo" spellcheck="false">
+              <div class="hint"><span>Format</span> <code>owner/repo</code><span>. Incidents from every project are collected in this one repository.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECRETS -->
+        <section>
+          <div class="sec-head"><h2>Secrets</h2><span class="note">a path to a file, never the key itself</span></div>
+          <div class="card">
+            <div class="field">
+              <div class="key"><span>Gitea token</span> <span class="keymono">gitea_token_path</span> <span class="badge live">works</span></div>
+              <input id="gitea_token_path" value="~/.config/retainer/gitea_token" spellcheck="false">
+              <div class="hint">The file holding the tracker token. The token is looked for in the environment first, then in this file, then in the standard place.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="field">
+              <div class="key"><span>DeepSeek key</span> <span class="keymono">deepseek_key_path</span> <span class="badge dead">not used yet</span></div>
+              <input id="deepseek_key_path" value="~/.config/retainer/deepseek_key" spellcheck="false">
+              <div class="hint">The file holding the key for the second opinion. Not used yet: the key is always taken from the standard place, so changing this changes nothing.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECOND OPINION (the key value goes to the server, never into the config text) -->
+        <section>
+          <div class="sec-head"><h2>Second opinion</h2><span class="note">another model checks risky steps</span></div>
+          <div class="card">
+            <div class="field">
+              <div class="key"><span>DeepSeek key</span> <span id="key-badge" class="badge dead">…</span></div>
+              <input id="deepseek-key-input" type="password" autocomplete="off" spellcheck="false" aria-label="DeepSeek key">
+              <div class="seg-row" style="margin-top:10px">
+                <div class="hint" id="key-hint">Paste the key and save. The page never shows it again.</div>
+                <span style="display:flex; gap:8px">
+                  <button class="copy" id="key-save" type="button">Save key</button>
+                  <button class="copy" id="key-remove" type="button" disabled>Remove</button>
+                </span>
+              </div>
+              <div class="hint"><span>Stored in</span> <code>~/.config/retainer/deepseek_key</code><span>, readable only by your user. Optional: everything else works without it.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- AUTONOMY -->
+        <section>
+          <div class="sec-head"><h2>Autonomy</h2><span class="note">how far the agent goes on its own</span></div>
+          <div class="card">
+            <div class="seg-row">
+              <div><div class="key"><span>Autonomy</span> <span class="keymono">autonomy_level</span> <span class="badge live">works</span></div><div class="what"><span>How much of the work the agent does without asking: tasks, branches, commits, pull requests, merge.</span> <b>Not</b> <span>about calling tools — that is further down.</span></div></div>
+              <div class="segmented" role="radiogroup" aria-label="autonomy_level">
+                <label><input type="radio" name="autonomy" value="manual"><span>manual</span></label>
+                <label><input type="radio" name="autonomy" value="assisted"><span>assisted</span></label>
+                <label><input type="radio" name="autonomy" value="auto" checked><span>auto</span></label>
+                <label><input type="radio" name="autonomy" value="marathon"><span>marathon</span></label>
+              </div>
+            </div>
+            <div class="what legend sep">
+              <div><b>manual</b> <span>— does nothing by itself, only on your command.</span></div>
+              <div><b>assisted</b> <span>— does, but asks permission every time.</span></div>
+              <div><b>auto</b> <span>— acts by itself, asks only on contested points.</span></div>
+              <div><b>marathon</b> <span>— a long run without you: stops nowhere, merges green pull requests itself and asks no questions. A fork in the work becomes a separate task with the chosen default, and the work goes on. Checks and review stay.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- GIT FLOW BY STEP (flow_*) -->
+        <section>
+          <div class="sec-head"><h2>Git flow by step</h2><span class="note">issue · branch · commit · PR · merge · cleanup</span></div>
+          <div class="card">
+            <div class="what"><b>off</b> <span>— I do not do it ·</span> <b>ask</b> <span>— I propose, wait for "ok" ·</span> <b>auto</b> <span>— I do it myself. If you leave a step alone, it follows "Autonomy" above; clicking the chosen value again clears it and returns the step there. The "Ask you" and "Confirm understanding" rows are not git steps: the question itself is the subject of the step, so the positions are labelled with words.</span></div>
+            <div class="rows sep">
+              <div class="seg-row">
+                <div><div class="key"><span>File an issue</span> <span class="keymono">flow_issue</span></div><div class="what">A task in the tracker before any work starts.</div></div>
+                <div class="segmented" role="radiogroup" aria-label="flow_issue">
+                  <label><input type="radio" name="flow_issue" value="off"><span>off</span></label>
+                  <label><input type="radio" name="flow_issue" value="ask"><span>ask</span></label>
+                  <label><input type="radio" name="flow_issue" value="auto"><span>auto</span></label>
+                </div>
+              </div>
+              <div class="seg-row">
+                <div><div class="key"><span>Branch</span> <span class="keymono">flow_branch</span></div><div class="what"><span>A branch named after the task,</span> <code>issue-NNN</code><span>, off the main branch.</span></div></div>
+                <div class="segmented" role="radiogroup" aria-label="flow_branch">
+                  <label><input type="radio" name="flow_branch" value="off"><span>off</span></label>
+                  <label><input type="radio" name="flow_branch" value="ask"><span>ask</span></label>
+                  <label><input type="radio" name="flow_branch" value="auto"><span>auto</span></label>
+                </div>
+              </div>
+              <div class="seg-row">
+                <div><div class="key"><span>Commits</span> <span class="keymono">flow_commit</span></div><div class="what">Commits that name their task.</div></div>
+                <div class="segmented" role="radiogroup" aria-label="flow_commit">
+                  <label><input type="radio" name="flow_commit" value="off"><span>off</span></label>
+                  <label><input type="radio" name="flow_commit" value="ask"><span>ask</span></label>
+                  <label><input type="radio" name="flow_commit" value="auto"><span>auto</span></label>
+                </div>
+              </div>
+              <div class="seg-row">
+                <div><div class="key"><span>Open a PR</span> <span class="keymono">flow_pr</span></div><div class="what">A pull request that closes its task when merged.</div></div>
+                <div class="segmented" role="radiogroup" aria-label="flow_pr">
+                  <label><input type="radio" name="flow_pr" value="off"><span>off</span></label>
+                  <label><input type="radio" name="flow_pr" value="ask"><span>ask</span></label>
+                  <label><input type="radio" name="flow_pr" value="auto"><span>auto</span></label>
+                </div>
+              </div>
+              <div class="seg-row">
+                <div><div class="key"><span>Merge</span> <span class="keymono">flow_merge</span></div><div class="what">Merge the PR. If you leave it alone, it is yours everywhere except marathon; there the agent merges itself, but only a green PR.</div></div>
+                <div class="segmented" role="radiogroup" aria-label="flow_merge">
+                  <label><input type="radio" name="flow_merge" value="off"><span>off</span></label>
+                  <label><input type="radio" name="flow_merge" value="ask"><span>ask</span></label>
+                  <label><input type="radio" name="flow_merge" value="auto"><span>auto</span></label>
+                </div>
+              </div>
+              <div class="seg-row">
+                <div><div class="key"><span>Cleanup</span> <span class="keymono">flow_cleanup</span></div><div class="what">Close the task, take off its working label, bring the main branch up to date.</div></div>
+                <div class="segmented" role="radiogroup" aria-label="flow_cleanup">
+                  <label><input type="radio" name="flow_cleanup" value="off"><span>off</span></label>
+                  <label><input type="radio" name="flow_cleanup" value="ask"><span>ask</span></label>
+                  <label><input type="radio" name="flow_cleanup" value="auto"><span>auto</span></label>
+                </div>
+              </div>
+              <div class="seg-row">
+                <div><div class="key"><span>Ask you</span> <span class="keymono">flow_ask_owner</span></div><div class="what"><span>The right to stop work with a question.</span> <b>do not ask</b> <span>— there will be no questions at all: a fork goes out as a separate task with the chosen default. There is no third position here — "ask permission to ask" does not exist.</span></div></div>
+                <div class="segmented words" role="radiogroup" aria-label="flow_ask_owner">
+                  <label><input type="radio" name="flow_ask_owner" value="off"><span>do not ask</span></label>
+                  <label><input type="radio" name="flow_ask_owner" value="auto"><span>may ask</span></label>
+                </div>
+              </div>
+              <div class="seg-row">
+                <div><div class="key"><span>Confirm understanding</span> <span class="keymono">flow_confirm_intake</span></div><div class="what"><span>Before starting, the agent writes in a line or two how it understood the task and waits for "ok". This is not about forks inside the work but about its boundaries — so it stays on even in a long autonomous run.</span> <b>straight to work</b> <span>— it starts without confirming.</span></div></div>
+                <div class="segmented words" role="radiogroup" aria-label="flow_confirm_intake">
+                  <label><input type="radio" name="flow_confirm_intake" value="off"><span>straight to work</span></label>
+                  <label><input type="radio" name="flow_confirm_intake" value="auto"><span>confirm understanding</span></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TOOL-CALL RULES -->
+        <section>
+          <div class="sec-head"><h2>When to call tools</h2><span class="note">review, plan check, browser test, second opinion</span></div>
+          <div class="card">
+            <div class="what"><b>off</b> <span>— not used ·</span> <b>ask</b> <span>— I propose and wait for "ok" ·</span> <b>auto</b> <span>— I call it myself when needed.</span></div>
+            <div class="seg-row sep">
+              <div><div class="key">Global mode</div><div class="what">One setting for every tool, or each on its own.</div></div>
+              <div class="segmented" role="radiogroup" aria-label="tools_mode">
+                <label><input type="radio" name="tools_mode" value="always_ask"><span>always propose</span></label>
+                <label><input type="radio" name="tools_mode" value="always_auto"><span>always by itself</span></label>
+                <label><input type="radio" name="tools_mode" value="manual" checked><span>per tool</span></label>
+              </div>
+            </div>
+            <div class="what sep">"per&nbsp;tool" — each toggle below counts. "always&nbsp;propose" and "always&nbsp;by&nbsp;itself" make every tool ask or act by itself, except the ones switched off below.</div>
+            <div id="tools-list" class="rows sep">
+              <div class="seg-row">
+                <div><div class="key"><span>Code reviewer</span> <span class="keymono">tool_code_reviewer</span></div><div class="what">Reads the diff before a commit. A merge needs a review record on the exact version being merged; who wrote it is not checked, so beyond that this is a recommendation.</div></div>
+                <div class="segmented" role="radiogroup" aria-label="tool_code_reviewer">
+                  <label><input type="radio" name="tool_code_reviewer" value="off"><span>off</span></label>
+                  <label><input type="radio" name="tool_code_reviewer" value="ask" checked><span>ask</span></label>
+                  <label><input type="radio" name="tool_code_reviewer" value="auto"><span>auto</span></label>
+                </div>
+              </div>
+              <div class="seg-row">
+                <div><div class="key"><span>Plan check</span> <span class="keymono">tool_plan_checker</span></div><div class="what">Checks the task plan before any code is written. A recommendation: nothing stops the code if the check is skipped.</div></div>
+                <div class="segmented" role="radiogroup" aria-label="tool_plan_checker">
+                  <label><input type="radio" name="tool_plan_checker" value="off"><span>off</span></label>
+                  <label><input type="radio" name="tool_plan_checker" value="ask" checked><span>ask</span></label>
+                  <label><input type="radio" name="tool_plan_checker" value="auto"><span>auto</span></label>
+                </div>
+              </div>
+              <div class="seg-row">
+                <div><div class="key"><span>Tester</span> <span class="keymono">tool_tester</span></div><div class="what">Opens changed pages in a real browser and clicks through them. A recommendation: nothing stops the work if it is skipped.</div></div>
+                <div class="segmented" role="radiogroup" aria-label="tool_tester">
+                  <label><input type="radio" name="tool_tester" value="off"><span>off</span></label>
+                  <label><input type="radio" name="tool_tester" value="ask" checked><span>ask</span></label>
+                  <label><input type="radio" name="tool_tester" value="auto"><span>auto</span></label>
+                </div>
+              </div>
+              <div class="seg-row">
+                <div><div class="key"><span>Second opinion</span> <span class="keymono">tool_second_opinion</span></div><div class="what">Asks another model before an important or irreversible step. A recommendation: nothing stops the work if it is skipped.</div></div>
+                <div class="segmented" role="radiogroup" aria-label="tool_second_opinion">
+                  <label><input type="radio" name="tool_second_opinion" value="off"><span>off</span></label>
+                  <label><input type="radio" name="tool_second_opinion" value="ask" checked><span>ask</span></label>
+                  <label><input type="radio" name="tool_second_opinion" value="auto"><span>auto</span></label>
+                </div>
+              </div>
+            </div>
+            <!-- What the marathon makes of `ask`, per tool. data-ask-becomes is compared with the
+                 resolver's own answer by tests/test_tool_policy.sh, so the promise cannot drift. -->
+            <div id="marathon-notes" class="marathon" hidden>
+              <div><b>In a marathon</b> <span>nobody is there to answer "ask", so it turns into a decision:</span></div>
+              <div class="mnote" data-tool="code_reviewer" data-ask-becomes="auto"><span class="keymono">tool_code_reviewer</span> <span>review always runs, whatever is chosen above</span></div>
+              <div class="mnote" data-tool="plan_checker" data-ask-becomes="auto"><span class="keymono">tool_plan_checker</span> <span>"ask" works as "auto": the plan is checked without asking</span></div>
+              <div class="mnote" data-tool="tester" data-ask-becomes="off"><span class="keymono">tool_tester</span> <span>"ask" works as "off": the browser test is skipped</span></div>
+              <div class="mnote" data-tool="second_opinion" data-ask-becomes="off"><span class="keymono">tool_second_opinion</span> <span>"ask" works as "off": no second opinion is requested</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- AUTONOMOUS RUNS (status + pause) -->
+        <section>
+          <div class="sec-head"><h2>Auto-continue</h2><span class="note">picks the work back up without you</span></div>
+          <div class="card">
+            <div class="seg-row">
+              <div><div class="key"><span>Auto-continue</span> <span id="conv-badge" class="badge dead">…</span></div><div class="what">Picks up tasks already in progress and restarts runs that failed or hit a usage limit.</div></div>
+              <button class="copy" id="pause-btn" disabled style="min-width:150px">…</button>
+            </div>
+            <div class="what sep"><b>Pause</b> <span>— stops new runs at once; a session already running is not interrupted. Safe to press at any moment. What to run and when is set up in the terminal, not here.</span></div>
+          </div>
+        </section>
+
+        <!-- INTEGRATIONS (status — where what lives) -->
+        <section>
+          <div class="sec-head"><h2>What is connected</h2><span class="note">lives outside this file</span></div>
+          <div class="card info"><div class="key">graphify</div><div class="what">Builds a knowledge graph of code and docs. Installed once, works in every project.</div></div>
+          <div class="card info"><div class="key"><span>Managed projects</span> <span id="repos-badge" class="badge dead">…</span></div><div class="what" id="repos-what">The projects the agent looks after; they are the ones you can pick below. Loading the list…</div></div>
+        </section>
+      </div>
+
+      <!-- CONFIG PREVIEW: global -->
+      <aside>
+        <div class="console">
+          <div class="bar"><span class="path">config.toml</span>
+            <span class="acts">
+              <button class="copy" id="copy">copy</button>
+              <button class="copy primary" id="save">Save</button>
+            </span>
+          </div>
+          <pre id="out"></pre>
+        </div>
+        <p class="aside-note"><b>"Save"</b> <span>writes the file at once, through a local server that runs only on this computer. Opened the page as a plain file? Then there is no server: press "copy" and paste the text into the file yourself. Secrets are stored as paths to files, never as values.</span></p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ═════════════ THE PROJECT PICKER ═════════════ -->
+  <section class="band" id="project">
+    <div>
+      <h2 class="layer-title">For one project</h2>
+      <p class="layer-note">Pick a project. Its current checks are read first; what you change below is written to that project alone.</p>
+    </div>
+    <div>
+      <select id="proj" aria-label="project">
+        <option value="">— project —</option>
+      </select>
+      <div id="pstate" class="pstate"></div>
+    </div>
+  </section>
+
+  <!-- ═════════════ LAYER 2: THE CHOSEN PROJECT ═════════════ -->
+  <section class="layer proj-layer" id="project-layer">
+    <div class="grid">
+      <div class="col">
+        <section>
+          <div class="card info" aria-live="polite">
+            <div class="gauge">
+              <!-- The denominator and bars are built from the order registry: written by hand, they
+                        drifted from it silently — the gauge counted six keys out of eleven, and five
+                        controls did not move the number. -->
+              <div class="num"><b id="g-on">0</b><span> / <b id="g-all">0</b></span></div>
+              <div class="cap">checks on</div>
+              <div class="bars" id="g-bars"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- BASELINE -->
+        <section>
+          <div class="sec-head"><h2>Base</h2><span class="note">always on, cannot be turned off</span></div>
+          <div class="card locked">
+            <div class="key">strict gate</div>
+            <div class="ctrl"><span class="chip lock">locked</span></div>
+            <div class="what">ruff format+check · WPS · mypy strict · import-linter · codespell · pytest+100% coverage</div>
+            <div class="catches">On an empty project strictness costs nothing: the first commit already passes the full gate.</div>
+          </div>
+          <div class="card locked">
+            <div class="key">guard probe</div>
+            <div class="ctrl"><span class="chip lock">locked</span></div>
+            <div class="what">the guard is tried live, not just found on disk</div>
+          </div>
+        </section>
+
+        <!-- RIGOR -->
+        <section>
+          <div class="sec-head"><h2>Extra checks</h2><span class="note">on top of the base; switching one off never goes below it</span></div>
+
+          <div class="card">
+            <div class="key">hooks_check</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="hooks_check" checked><span class="track"></span></label></div>
+            <div class="what">The project's git hooks are connected.</div>
+            <div class="catches"><b>goes red when:</b> <span>the hooks are not connected, so nothing is checked before a commit or a push. Skipped in CI, which has no hooks of its own.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">guard_registration</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="guard_registration" checked><span class="track"></span></label></div>
+            <div class="what">The guard is registered, so it really loads in a session.</div>
+            <div class="catches"><b>goes red when:</b> <span>the guard is on disk but nothing registers it, or it is registered twice. Skipped in CI.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">doc_links</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="doc_links" checked><span class="track"></span></label></div>
+            <div class="what">Every path named in the agent's instructions exists.</div>
+            <div class="catches"><b>goes red when:</b> <span>an instruction names a path the project does not have. Prose with a slash, like</span> <code>owner/repo</code><span>, is not taken for a path; to skip a line, mark it with</span> <code>retainer:allow-link</code></div>
+          </div>
+
+          <div class="card">
+            <div class="key">agent_canon</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="agent_canon" checked><span class="track"></span></label></div>
+            <div class="what">Each agent role exists once: either the project's own or the shared one.</div>
+            <div class="catches"><b>goes red when:</b> <span>the same role is defined in both places. Which one runs is then undefined, and an edit to the shared one may change nothing.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">protected_copy</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="protected_copy" checked><span class="track"></span></label></div>
+            <div class="what">A protected file has no unprotected copy under another name.</div>
+            <div class="catches"><b>goes red when:</b> <span>a copy of a protected file lies next to it under another name. The copy can be edited freely, so the protection means nothing.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">bypass_alert</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="bypass_alert" checked><span class="track"></span></label></div>
+            <div class="what">Repeated guard blocks do not go unnoticed.</div>
+            <div class="catches"><b>goes red when:</b> <span>the same block repeats more often than the daily threshold. One block is normal work; repeats mean the rule needs a look.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">hot_context</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="hot_context" checked><span class="track"></span></label></div>
+            <div class="what">What the agent must read at the start of a session stays short and holds rules, not reports.</div>
+            <div class="catches"><b>goes red when:</b> <span>it grows past the size limit or lists finished tasks.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">remote_creds</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="remote_creds" checked><span class="track"></span></label></div>
+            <div class="what">The remote repository address carries no login, password or token.</div>
+            <div class="catches"><b>goes red when:</b> <span>the address holds credentials: they sit there in plain text and outlive a password change. Only the remote's name is printed, never the value.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">skills_catalog</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="skills_catalog" checked><span class="track"></span></label></div>
+            <div class="what">The list of skills in the docs is built from the skills themselves.</div>
+            <div class="catches"><b>goes red when:</b> <span>a description in the docs differs from the skill it describes.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">doc_claims</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="doc_claims" checked><span class="track"></span></label></div>
+            <div class="what">A fact a document marks as checkable is checked by running the command next to it.</div>
+            <div class="catches"><b>goes red when:</b> <span>the command next to a marked claim fails. Unmarked prose is not checked.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">practices_form</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="practices_form" checked><span class="track"></span></label></div>
+            <div class="what"><span>A practice rule says where it was taken from (</span><code>Sample: &lt;file&gt;:&lt;line&gt;</code><span>) and when (</span><code>Distilled: &lt;date&gt;</code>).</div>
+            <div class="catches"><b>goes red when:</b> <span>a rule changed in this branch has no source or no date. Untouched old rules are not judged; with no</span> <code>.retainer/practices.md</code> <span>the step is silent.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">runner_labels</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="runner_labels" checked><span class="track"></span></label></div>
+            <div class="what">Every CI job asks for the same runner, the one the project declares.</div>
+            <div class="catches"><b>goes red when:</b> <span>a job asks for another runner. Such a job never starts and waits in the queue forever, and whatever depends on it is silently off.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">complexity_trace</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="complexity_trace" checked><span class="track"></span></label></div>
+            <div class="what"><span>A new code file (</span><code>.py</code>, <code>.sh</code><span>) states in one marked line why it is needed.</span></div>
+            <div class="catches"><b>goes red when:</b> <span>a module or script added on this branch has no such line. Tests, docs and presets are exempt. Silent in a project whose main branch is not called</span> <code>main</code></div>
+          </div>
+
+          <div class="card">
+            <div class="key">prose_lang<span class="chip undeclared">needs declaration</span></div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="prose_lang"><span class="track"></span></label></div>
+            <div class="what">Comments, docstrings and names in code are written in Latin script. Text shown to users is not checked.</div>
+            <div class="catches"><b>goes red when:</b> <span>new or changed code has Cyrillic in a comment, docstring or name; old code is not judged. To allow one line, mark it with</span> <code>retainer:allow-prose</code><span>. Works only once the key is written into the project config, so an existing project does not go red on its first edit.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">prototype_debt<span class="chip undeclared">needs declaration</span></div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="prototype_debt"><span class="track"></span></label></div>
+            <div class="what"><span>Code knowingly left below the standard is marked in place with</span> <code># prototype: #&lt;task&gt; — &lt;what replaces it&gt;</code><span>, so the list of such debt is read from the code.</span></div>
+            <div class="catches"><b>goes red when:</b> <span>a prototype marker has no task number, so nobody can find what was agreed. No markers — silent. Works only once the key is written into the project config.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">glossary_terms<span class="chip undeclared">needs declaration</span></div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="glossary_terms"><span class="track"></span></label></div>
+            <div class="what"><span>A term that code or docs refer to as</span> <code>:term:`Name`</code> <span>is defined in the project glossary.</span></div>
+            <div class="catches"><b>goes red when:</b> <span>a reference points to a term the glossary does not have; case is ignored. No glossary or no references — silent; a glossary named in the config but not found is a refusal. Works only once the key is written into the project config.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">deny_sync</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="deny_sync" checked><span class="track"></span></label></div>
+            <div class="what">The project's list of protected paths agrees with the paths the tools are forbidden to touch.</div>
+            <div class="catches"><b>goes red when:</b> <span>a path is forbidden to the tools but missing from the project's list, so whoever reads the config thinks it is open. The reverse gap is reported on a line of its own.</span></div>
+          </div>
+
+          <div class="card">
+            <div class="key">dependency_check</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="dependency_check" checked><span class="track"></span></label></div>
+            <div class="what">Every library in the dependency list is actually installed.</div>
+            <div class="catches"><b>goes red when:</b> <span>a listed library is not installed. A made-up name is a risk on its own: someone can register it and ship their code under it.</span></div>
+          </div>
+
+          <div class="card seg">
+            <div class="seg-row">
+              <div>
+                <div class="key">secret_scan</div>
+                <div class="what">Looks for secrets committed into the repository.</div>
+              </div>
+              <div class="segmented" role="radiogroup" aria-label="secret_scan">
+                <label><input type="radio" name="secretscan" value="false"><span>off</span></label>
+                <label><input type="radio" name="secretscan" value="basic" checked><span>basic</span></label>
+                <label><input type="radio" name="secretscan" value="thorough"><span>thorough</span></label>
+              </div>
+            </div>
+            <div class="catches"><b>off:</b> <span>not checked.</span> <b>basic:</b> <span>known key formats only (AWS, GitHub, Slack, JWT, PEM), almost no false alarms.</span> <b>thorough:</b> <span>also generic</span> <code>secret=…</code> <span>and</span> <code>password=…</code> <span>lines. A test secret is marked with</span> <code># retainer:allow-secret</code></div>
+          </div>
+
+          <div class="card seg">
+            <div class="seg-row">
+              <div>
+                <div class="key">req_trace</div>
+                <div class="what"><span>Links each requirement to the code and tests tagged with it, like</span> <code>req: R-1</code></div>
+              </div>
+              <div class="segmented" role="radiogroup" aria-label="req_trace">
+                <label><input type="radio" name="reqtrace" value="false"><span>off</span></label>
+                <label><input type="radio" name="reqtrace" value="basic" checked><span>basic</span></label>
+                <label><input type="radio" name="reqtrace" value="thorough"><span>thorough</span></label>
+              </div>
+            </div>
+            <div class="catches"><b>off:</b> <span>not checked.</span> <b>basic:</b> <span>lists uncovered requirements and stray tags; the gate stays green.</span> <b>thorough:</b> <span>the same, and the gate goes red. Requirements live in</span> <code>.retainer/requirements.md</code></div>
+          </div>
+        </section>
+
+        <!-- STACK -->
+        <section>
+          <div class="sec-head"><h2>Stack</h2><span class="note">turn on for the project's language</span></div>
+
+          <div class="card" data-stack>
+            <div class="key">django_extras</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="django_extras"><span class="track"></span></label></div>
+            <div class="what">Template formatting, Django's own check, missing migrations, and calculations kept free of web code.</div>
+            <div class="catches"><b>goes red when:</b> <span>a template is not formatted, a migration is missing, or the calculation layer imports Django web code.</span></div>
+          </div>
+
+          <div class="card" data-stack>
+            <div class="key">js_gate</div>
+            <div class="ctrl"><label class="switch"><input type="checkbox" data-key="js_gate"><span class="track"></span></label></div>
+            <div class="what">Syntax check, lint and tests for JavaScript that runs outside the browser.</div>
+            <div class="catches"><b>goes red when:</b> <span>such code has a syntax error, dead code or a shadowed name.</span></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- CONFIG PREVIEW: the chosen project -->
+      <aside>
+        <div class="console">
+          <div class="bar"><span class="path">.retainer/config.toml</span>
+            <span class="acts">
+              <button class="copy" id="rigor-copy">copy</button>
+              <button class="copy primary" id="rigor-save">Save</button>
+            </span>
+          </div>
+          <pre id="rigor-out"></pre>
+        </div>
+        <p class="aside-note"><b>"Save"</b> <span>writes the checks of the project picked above into that project's own config file. Before a project is picked, this is a template to copy by hand. A check the project never declared stays undeclared unless you touch it here. By default for Python everything is on except the stack, with the secret scan and requirement links in basic mode.</span></p>
+      </aside>
+    </div>
+  </section>
+
+  <footer>
+    <span>Settings for all projects live in</span> <code>~/.config/retainer/config.toml</code><span>; a project's checks live in its own</span> <code>.retainer/config.toml</code><span>. The base checks ignore every switch on this page.</span>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    // ── page language ──────────────────────────────────────────────────────────
+    // Only the Russian side lives here; the English stays the markup's own text, so one text has one
+    // home and the two cannot drift. A fragment inside <code>, <kbd> or any .mono element is left
+    // alone: a config key, a path or a command reads the same in both languages. The corpus measures
+    // coverage against that same boundary, so the two must stay identical.
+    var I18N_RU = {
+      "retainer · settings": "retainer · настройки",
+      "Settings": "Настройки",
+      "The upper part applies to every project. The lower part belongs to one project, the one you pick in the bar between them.": "Верхняя часть действует на все проекты. Нижняя — на один проект, тот, что выбран в полосе между ними.",
+      "For all projects": "Для всех проектов",
+      "One file in your home folder; every project reads it.": "Один файл в домашней папке, его читает каждый проект.",
+      "Task tracker": "Трекер задач",
+      "where tasks and incidents go": "куда уходят задачи и инциденты",
+      "Tracker address": "Адрес трекера",
+      "works": "работает",
+      "Your Gitea. Tasks, pull requests and incident reports are filed here.": "Твой Gitea. Сюда заводятся задачи, пул-реквесты и сообщения об инцидентах.",
+      "Inbox repository": "Репозиторий-инбокс",
+      "Format": "В формате",
+      ". Incidents from every project are collected in this one repository.": ". Инциденты со всех проектов собираются в этом одном репозитории.",
+      "Secrets": "Секреты",
+      "a path to a file, never the key itself": "путь к файлу, а не сам ключ",
+      "another model checks risky steps": "другая модель проверяет рискованные шаги",
+      "Paste the key and save. The page never shows it again.": "Вставь ключ и сохрани. Страница больше его не покажет.",
+      "Save key": "Сохранить ключ",
+      "Remove": "Удалить",
+      "Stored in": "Хранится в",
+      ", readable only by your user. Optional: everything else works without it.": ", читать его может только твой пользователь. Необязательно: всё остальное работает и без него.",
+      "set": "задан",
+      "set in the environment": "задан в окружении",
+      "not set": "не задан",
+      "Saved.": "Сохранено.",
+      "Removed.": "Удалено.",
+      "Not saved: the key is empty, too long or holds spaces.": "Не сохранено: ключ пустой, слишком длинный или с пробелами.",
+      "Not saved: the server could not write the key.": "Не сохранено: сервер не смог записать ключ.",
+      "The key comes from DEEPSEEK_API_KEY in the environment; it wins over the file.": "Ключ берётся из DEEPSEEK_API_KEY в окружении; он важнее файла.",
+      "Gitea token": "Токен Gitea",
+      "The file holding the tracker token. The token is looked for in the environment first, then in this file, then in the standard place.": "Файл с токеном трекера. Токен ищется сначала в окружении, потом в этом файле, потом в стандартном месте.",
+      "DeepSeek key": "Ключ DeepSeek",
+      "not used yet": "пока не используется",
+      "The file holding the key for the second opinion. Not used yet: the key is always taken from the standard place, so changing this changes nothing.": "Файл с ключом для второго мнения. Пока не используется: ключ всегда берётся из стандартного места, поэтому правка здесь ничего не меняет.",
+      "Autonomy": "Автономность",
+      "how far the agent goes on its own": "насколько далеко агент идёт сам",
+      "How much of the work the agent does without asking: tasks, branches, commits, pull requests, merge.": "Сколько работы агент делает, не спрашивая: задачи, ветки, коммиты, пул-реквесты, мерж.",
+      "Not": "Не",
+      "about calling tools — that is further down.": "про вызов инструментов — это ниже.",
+      "manual": "manual",
+      "assisted": "assisted",
+      "auto": "auto",
+      "marathon": "marathon",
+      "— does nothing by itself, only on your command.": "— ничего не делает сам, только по твоей команде.",
+      "— does, but asks permission every time.": "— делает, но каждый раз спрашивает разрешение.",
+      "— acts by itself, asks only on contested points.": "— действует сам, спрашивает только на спорном.",
+      "— a long run without you: stops nowhere, merges green pull requests itself and asks no questions. A fork in the work becomes a separate task with the chosen default, and the work goes on. Checks and review stay.": "— длинный прогон без тебя: нигде не встаёт, сам мержит зелёные пул-реквесты и не задаёт вопросов. Развилка в работе становится отдельной задачей с выбранным умолчанием, и работа идёт дальше. Проверки и ревью остаются.",
+      "Git flow by step": "Git-поток по шагам",
+      "issue · branch · commit · PR · merge · cleanup": "issue · ветка · коммит · PR · мерж · чистка",
+      "off": "off",
+      "— I do not do it ·": "— не делаю ·",
+      "ask": "ask",
+      "— I propose, wait for \"ok\" ·": "— предлагаю, жду «ок» ·",
+      "— I do it myself. If you leave a step alone, it follows \"Autonomy\" above; clicking the chosen value again clears it and returns the step there. The \"Ask you\" and \"Confirm understanding\" rows are not git steps: the question itself is the subject of the step, so the positions are labelled with words.": "— делаю сам. Не трогаешь шаг — он идёт по «Автономности» выше; повторный клик по выбранному значению снимает его и возвращает шаг туда же. Строки «Спросить тебя» и «Сверить понимание» — не git-шаги: там сам вопрос и есть предмет шага, поэтому позиции подписаны словами.",
+      "File an issue": "Завести issue",
+      "A task in the tracker before any work starts.": "Задача в трекере до начала работы.",
+      "Branch": "Ветка",
+      "A branch named after the task,": "Ветка по номеру задачи,",
+      ", off the main branch.": ", от основной ветки.",
+      "Commits": "Коммиты",
+      "Commits that name their task.": "Коммиты, которые называют свою задачу.",
+      "Open a PR": "Открыть PR",
+      "A pull request that closes its task when merged.": "Пул-реквест, который закрывает свою задачу при мерже.",
+      "Merge": "Мерж",
+      "Merge the PR. If you leave it alone, it is yours everywhere except marathon; there the agent merges itself, but only a green PR.": "Слить PR. Не трогаешь — за тобой везде, кроме марафона; там агент мержит сам, но только зелёный PR.",
+      "Cleanup": "Чистка",
+      "Close the task, take off its working label, bring the main branch up to date.": "Закрыть задачу, снять с неё рабочую метку, подтянуть основную ветку.",
+      "Ask you": "Спросить тебя",
+      "The right to stop work with a question.": "Право остановить работу вопросом.",
+      "do not ask": "не спрашивать",
+      "— there will be no questions at all: a fork goes out as a separate task with the chosen default. There is no third position here — \"ask permission to ask\" does not exist.": "— вопросов не будет вовсе: развилка уйдёт отдельной задачей с выбранным умолчанием. Третьей позиции тут нет — «спросить разрешения спросить» не бывает.",
+      "may ask": "можно спросить",
+      "Confirm understanding": "Сверить понимание",
+      "Before starting, the agent writes in a line or two how it understood the task and waits for \"ok\". This is not about forks inside the work but about its boundaries — so it stays on even in a long autonomous run.": "Прежде чем взяться, агент пишет одной-двумя строками, как он понял задачу, и ждёт «ок». Это не про развилки внутри работы, а про её границы — поэтому остаётся включённым и в длинном автономном прогоне.",
+      "straight to work": "сразу к делу",
+      "— it starts without confirming.": "— берётся без сверки.",
+      "confirm understanding": "сверять понимание",
+      "When to call tools": "Когда звать инструменты",
+      "review, plan check, browser test, second opinion": "ревью, проверка плана, браузерный тест, второе мнение",
+      "— not used ·": "— не используем ·",
+      "— I propose and wait for \"ok\" ·": "— предлагаю и жду «ок» ·",
+      "— I call it myself when needed.": "— зову сам, когда нужно.",
+      "Global mode": "Общий режим",
+      "One setting for every tool, or each on its own.": "Одна настройка на все инструменты или каждый по отдельности.",
+      "always propose": "всегда предлагать",
+      "always by itself": "всегда сам",
+      "per tool": "по каждому",
+      "\"per tool\" — each toggle below counts. \"always propose\" and \"always by itself\" make every tool ask or act by itself, except the ones switched off below.": "«по каждому» — действует каждый переключатель ниже. «всегда предлагать» и «всегда сам» заставляют каждый инструмент спрашивать или действовать самому, кроме выключенных ниже.",
+      "Code reviewer": "Код-ревьюер",
+      "Reads the diff before a commit. A merge needs a review record on the exact version being merged; who wrote it is not checked, so beyond that this is a recommendation.": "Читает дифф перед коммитом. Для мержа нужна запись о ревью ровно на ту версию, что вливается; кем она оставлена, не проверяется, так что сверх этого — рекомендация.",
+      "Plan check": "Проверка плана",
+      "Checks the task plan before any code is written. A recommendation: nothing stops the code if the check is skipped.": "Проверяет план задачи до того, как написан код. Рекомендация: если проверку пропустить, код ничто не остановит.",
+      "Tester": "Тестировщик",
+      "Opens changed pages in a real browser and clicks through them. A recommendation: nothing stops the work if it is skipped.": "Открывает изменённые страницы в настоящем браузере и прокликивает их. Рекомендация: если пропустить, работу ничто не остановит.",
+      "Second opinion": "Второе мнение",
+      "Asks another model before an important or irreversible step. A recommendation: nothing stops the work if it is skipped.": "Спрашивает другую модель перед важным или необратимым шагом. Рекомендация: если пропустить, работу ничто не остановит.",
+      "In a marathon": "В марафоне",
+      "nobody is there to answer \"ask\", so it turns into a decision:": "отвечать на «ask» некому, поэтому он превращается в решение:",
+      "review always runs, whatever is chosen above": "ревью идёт всегда, что бы ни было выбрано выше",
+      "\"ask\" works as \"auto\": the plan is checked without asking": "«ask» работает как «auto»: план проверяется без вопроса",
+      "\"ask\" works as \"off\": the browser test is skipped": "«ask» работает как «off»: браузерный тест пропускается",
+      "\"ask\" works as \"off\": no second opinion is requested": "«ask» работает как «off»: второе мнение не запрашивается",
+      "Auto-continue": "Автопродолжение",
+      "picks the work back up without you": "подхватывает работу без тебя",
+      "Picks up tasks already in progress and restarts runs that failed or hit a usage limit.": "Сам продолжает начатые задачи и перезапускает прогоны, которые упали или упёрлись в лимит.",
+      "Pause": "Пауза",
+      "— stops new runs at once; a session already running is not interrupted. Safe to press at any moment. What to run and when is set up in the terminal, not here.": "— сразу останавливает новые запуски; уже идущую сессию не прерывает. Жать безопасно в любой момент. Что и когда запускать, настраивается в терминале, а не здесь.",
+      "What is connected": "Что подключено",
+      "lives outside this file": "живёт вне этого файла",
+      "graphify": "graphify",
+      "Builds a knowledge graph of code and docs. Installed once, works in every project.": "Строит граф знаний по коду и докам. Ставится один раз, работает во всех проектах.",
+      "Managed projects": "Проекты под управлением",
+      "The projects the agent looks after; they are the ones you can pick below. Loading the list…": "Проекты, за которыми следит агент; именно их можно выбрать ниже. Загружаю список…",
+      "config.toml": "config.toml",
+      "copy": "копировать",
+      "Save": "Сохранить",
+      "\"Save\"": "«Сохранить»",
+      "writes the file at once, through a local server that runs only on this computer. Opened the page as a plain file? Then there is no server: press \"copy\" and paste the text into the file yourself. Secrets are stored as paths to files, never as values.": "пишет файл сразу, через локальный сервер, который работает только на этом компьютере. Открыл страницу просто как файл? Тогда сервера нет: жми «копировать» и вставь текст в файл сам. Секреты хранятся как пути к файлам, а не как значения.",
+      "For one project": "Для одного проекта",
+      "Pick a project. Its current checks are read first; what you change below is written to that project alone.": "Выбери проект. Сначала читаются его текущие проверки; то, что изменишь ниже, запишется только в этот проект.",
+      "— project —": "— проект —",
+      "checks on": "проверок включено",
+      "Base": "Базис",
+      "always on, cannot be turned off": "включён всегда, выключить нельзя",
+      "strict gate": "строгий гейт",
+      "locked": "заблокировано",
+      "ruff format+check · WPS · mypy strict · import-linter · codespell · pytest+100% coverage": "ruff format+check · WPS · mypy strict · import-linter · codespell · pytest+покрытие 100%",
+      "On an empty project strictness costs nothing: the first commit already passes the full gate.": "На пустом проекте строгость ничего не стоит: первый коммит уже проходит полный гейт.",
+      "guard probe": "проба сторожа",
+      "the guard is tried live, not just found on disk": "сторож проверяется живой пробой, а не наличием файла",
+      "Extra checks": "Дополнительные проверки",
+      "on top of the base; switching one off never goes below it": "сверх базиса; выключенная проверка ниже базиса не опускает",
+      "goes red when:": "краснеет, когда:",
+      "hooks_check": "hooks_check",
+      "The project's git hooks are connected.": "Git-хуки проекта подключены.",
+      "the hooks are not connected, so nothing is checked before a commit or a push. Skipped in CI, which has no hooks of its own.": "хуки не подключены, и перед коммитом и пушем ничего не проверяется. В CI пропускается: своих хуков там нет.",
+      "guard_registration": "guard_registration",
+      "The guard is registered, so it really loads in a session.": "Сторож зарегистрирован, поэтому действительно загружается в сессии.",
+      "the guard is on disk but nothing registers it, or it is registered twice. Skipped in CI.": "сторож лежит на диске, но его никто не регистрирует, либо он зарегистрирован дважды. В CI пропускается.",
+      "doc_links": "doc_links",
+      "Every path named in the agent's instructions exists.": "Каждый путь, названный в инструкциях агенту, существует.",
+      "an instruction names a path the project does not have. Prose with a slash, like": "в инструкции назван путь, которого в проекте нет. Проза с косой чертой вроде",
+      ", is not taken for a path; to skip a line, mark it with": ", путём не считается; чтобы пропустить строку, пометь её",
+      "agent_canon": "agent_canon",
+      "Each agent role exists once: either the project's own or the shared one.": "Каждая роль агента существует один раз: либо своя у проекта, либо общая.",
+      "the same role is defined in both places. Which one runs is then undefined, and an edit to the shared one may change nothing.": "одна и та же роль определена в обоих местах. Какая из них сработает, не определено, и правка общей может ничего не изменить.",
+      "protected_copy": "protected_copy",
+      "A protected file has no unprotected copy under another name.": "У защищённого файла нет незащищённой копии под другим именем.",
+      "a copy of a protected file lies next to it under another name. The copy can be edited freely, so the protection means nothing.": "рядом с защищённым файлом лежит его копия под другим именем. Копию можно свободно править, и защита теряет смысл.",
+      "bypass_alert": "bypass_alert",
+      "Repeated guard blocks do not go unnoticed.": "Повторные упоры в сторожа не проходят незамеченными.",
+      "the same block repeats more often than the daily threshold. One block is normal work; repeats mean the rule needs a look.": "один и тот же упор повторяется чаще суточного порога. Единичный упор — рабочая ситуация; повторы значат, что разобраться надо с правилом.",
+      "hot_context": "hot_context",
+      "What the agent must read at the start of a session stays short and holds rules, not reports.": "То, что агент обязан прочитать в начале сессии, остаётся коротким и держит правила, а не отчёты.",
+      "it grows past the size limit or lists finished tasks.": "оно разрослось сверх порога размера или перечисляет сделанные задачи.",
+      "remote_creds": "remote_creds",
+      "The remote repository address carries no login, password or token.": "В адресе удалённого репозитория нет логина, пароля или токена.",
+      "the address holds credentials: they sit there in plain text and outlive a password change. Only the remote's name is printed, never the value.": "в адресе есть учётные данные: они лежат открытым текстом и переживают смену пароля. Печатается только имя удалённого репозитория, не значение.",
+      "skills_catalog": "skills_catalog",
+      "The list of skills in the docs is built from the skills themselves.": "Список навыков в документации собран из самих навыков.",
+      "a description in the docs differs from the skill it describes.": "описание в документации расходится с навыком, который оно описывает.",
+      "doc_claims": "doc_claims",
+      "A fact a document marks as checkable is checked by running the command next to it.": "Факт, который документ помечает как проверяемый, проверяется запуском команды рядом с ним.",
+      "the command next to a marked claim fails. Unmarked prose is not checked.": "команда рядом с помеченным утверждением падает. Непомеченная проза не проверяется.",
+      "practices_form": "practices_form",
+      "A practice rule says where it was taken from (": "Правило практики говорит, откуда оно взято (",
+      ") and when (": ") и когда (",
+      "a rule changed in this branch has no source or no date. Untouched old rules are not judged; with no": "у правила, изменённого в этой ветке, нет источника или даты. Нетронутые старые правила не судятся; без",
+      "the step is silent.": "шаг молчит.",
+      "runner_labels": "runner_labels",
+      "Every CI job asks for the same runner, the one the project declares.": "Каждое задание CI просит одного и того же исполнителя — того, что объявлен в проекте.",
+      "a job asks for another runner. Such a job never starts and waits in the queue forever, and whatever depends on it is silently off.": "задание просит другого исполнителя. Такое задание не стартует и вечно ждёт в очереди, а всё, что на нём держится, молча выключено.",
+      "complexity_trace": "complexity_trace",
+      "A new code file (": "Новый файл кода (",
+      ") states in one marked line why it is needed.": ") одной помеченной строкой говорит, зачем он нужен.",
+      "a module or script added on this branch has no such line. Tests, docs and presets are exempt. Silent in a project whose main branch is not called": "у модуля или скрипта, добавленного в этой ветке, такой строки нет. Тесты, доки и пресеты освобождены. Молчит в проекте, где основная ветка называется не",
+      "prose_lang": "prose_lang",
+      "needs declaration": "требует объявления",
+      "Comments, docstrings and names in code are written in Latin script. Text shown to users is not checked.": "Комментарии, докстринги и имена в коде пишутся латиницей. Текст, который видит пользователь, не проверяется.",
+      "new or changed code has Cyrillic in a comment, docstring or name; old code is not judged. To allow one line, mark it with": "в новом или изменённом коде кириллица в комментарии, докстринге или имени; старый код не судится. Чтобы разрешить одну строку, пометь её",
+      ". Works only once the key is written into the project config, so an existing project does not go red on its first edit.": ". Работает, только когда ключ записан в конфиг проекта, — чтобы существующий проект не покраснел на первой же правке.",
+      "prototype_debt": "prototype_debt",
+      "Code knowingly left below the standard is marked in place with": "Код, сознательно оставленный ниже стандарта, помечается на месте строкой",
+      ", so the list of such debt is read from the code.": ", поэтому список такого долга читается из кода.",
+      "a prototype marker has no task number, so nobody can find what was agreed. No markers — silent. Works only once the key is written into the project config.": "у маркера прототипа нет номера задачи, и никто не найдёт, о чём договорились. Маркеров нет — молчит. Работает, только когда ключ записан в конфиг проекта.",
+      "glossary_terms": "glossary_terms",
+      "A term that code or docs refer to as": "Термин, на который код или доки ссылаются как",
+      "is defined in the project glossary.": "определён в словаре проекта.",
+      "a reference points to a term the glossary does not have; case is ignored. No glossary or no references — silent; a glossary named in the config but not found is a refusal. Works only once the key is written into the project config.": "ссылка ведёт на термин, которого в словаре нет; регистр не важен. Нет словаря или ссылок — молчит; словарь, названный в конфиге и не найденный, — отказ. Работает, только когда ключ записан в конфиг проекта.",
+      "deny_sync": "deny_sync",
+      "The project's list of protected paths agrees with the paths the tools are forbidden to touch.": "Список защищённых путей проекта совпадает с путями, которые инструментам трогать запрещено.",
+      "a path is forbidden to the tools but missing from the project's list, so whoever reads the config thinks it is open. The reverse gap is reported on a line of its own.": "путь запрещён инструментам, но его нет в списке проекта, и читающий конфиг считает его открытым. Обратный разрыв называется отдельной строкой.",
+      "dependency_check": "dependency_check",
+      "Every library in the dependency list is actually installed.": "Каждая библиотека из списка зависимостей действительно установлена.",
+      "a listed library is not installed. A made-up name is a risk on its own: someone can register it and ship their code under it.": "библиотека из списка не установлена. Выдуманное имя опасно само по себе: его могут зарегистрировать и выложить под ним свой код.",
+      "secret_scan": "secret_scan",
+      "Looks for secrets committed into the repository.": "Ищет секреты, попавшие в репозиторий.",
+      "basic": "basic",
+      "thorough": "thorough",
+      "off:": "off:",
+      "not checked.": "не проверяется.",
+      "basic:": "basic:",
+      "known key formats only (AWS, GitHub, Slack, JWT, PEM), almost no false alarms.": "только известные форматы ключей (AWS, GitHub, Slack, JWT, PEM), почти без ложных тревог.",
+      "thorough:": "thorough:",
+      "also generic": "плюс общие строки",
+      "and": "и",
+      "lines. A test secret is marked with": "— тестовый секрет помечается",
+      "req_trace": "req_trace",
+      "Links each requirement to the code and tests tagged with it, like": "Связывает каждое требование с кодом и тестами, помеченными им, например",
+      "lists uncovered requirements and stray tags; the gate stays green.": "перечисляет непокрытые требования и лишние метки; гейт остаётся зелёным.",
+      "the same, and the gate goes red. Requirements live in": "то же, и гейт краснеет. Требования лежат в",
+      "Stack": "Стек",
+      "turn on for the project's language": "включить под язык проекта",
+      "django_extras": "django_extras",
+      "Template formatting, Django's own check, missing migrations, and calculations kept free of web code.": "Формат шаблонов, собственная проверка Django, пропущенные миграции и расчёты без веб-кода.",
+      "a template is not formatted, a migration is missing, or the calculation layer imports Django web code.": "шаблон не отформатирован, миграция пропущена либо слой расчётов тянет веб-код Django.",
+      "js_gate": "js_gate",
+      "Syntax check, lint and tests for JavaScript that runs outside the browser.": "Проверка синтаксиса, линт и тесты для JavaScript, который работает вне браузера.",
+      "such code has a syntax error, dead code or a shadowed name.": "в таком коде синтаксическая ошибка, мёртвый код или затенённое имя.",
+      ".retainer/config.toml": ".retainer/config.toml",
+      "writes the checks of the project picked above into that project's own config file. Before a project is picked, this is a template to copy by hand. A check the project never declared stays undeclared unless you touch it here. By default for Python everything is on except the stack, with the secret scan and requirement links in basic mode.": "пишет проверки выбранного выше проекта в его собственный конфиг. Пока проект не выбран, это шаблон, который копируют вручную. Проверка, которую проект не объявлял, так и остаётся необъявленной, если не тронуть её здесь. По умолчанию для Python включено всё, кроме стека; поиск секретов и связь требований — в режиме basic.",
+      "Settings for all projects live in": "Настройки для всех проектов лежат в",
+      "; a project's checks live in its own": "; проверки проекта — в его собственном",
+      ". The base checks ignore every switch on this page.": ". Базовые проверки не подчиняются ни одному переключателю на этой странице.",
+      "copied ✓": "скопировано ✓",
+      "saved ✓": "сохранено ✓",
+      "no server — \"copy\"": "нет сервера — «копировать»",
+      "configured": "настроено",
+      "not configured": "не настроено",
+      "▶ Resume (paused)": "▶ Возобновить (на паузе)",
+      "⏸ Pause": "⏸ Поставить на паузу",
+      "no server": "нет сервера",
+      "list empty": "список пуст",
+      "managed": "под управлением",
+      "Managed:": "Под управлением:",
+      ". The list is edited with <code>retainer-register.sh</code>.": ". Список правится командой <code>retainer-register.sh</code>.",
+      "Opened as <code>file://</code> — no live status. Launch via <code>retainer-settings.sh</code>.": "Открыто как <code>file://</code> — живого статуса нет. Запусти через <code>retainer-settings.sh</code>.",
+      "The registry <code>~/.config/retainer/managed-repos</code> is empty — the sweeps see no project. To add: <code>retainer-register.sh add &lt;path&gt;</code>.": "Реестр <code>~/.config/retainer/managed-repos</code> пуст — агент не видит ни одного проекта. Добавить: <code>retainer-register.sh add &lt;путь&gt;</code>.",
+      "— registry empty: retainer-register.sh add —": "— реестр пуст: retainer-register.sh add —",
+      "no projects in managed-repos": "нет проектов в managed-repos",
+      "— no server (file://) —": "— нет сервера (file://) —",
+      "read": "прочитано",
+      "of": "из",
+      "regulators from this project": "регуляторов из этого проекта",
+      "no decision recorded: this project declares no regulators, and Save adds only what you touch": "решение не записано: этот проект не объявляет регуляторов, а «Сохранить» добавит только то, что тронешь здесь",
+      "choose a project": "выбери проект",
+      "not read yet": "ещё не прочитано",
+      "no [rigor]": "нет [rigor]",
+      "nothing to write": "нечего писать",
+      "error": "ошибка",
+      "reading": "читаю",
+      "outside the registry — Save stays locked": "вне реестра — «Сохранить» остаётся закрытым",
+      "no server — Save stays locked": "нет сервера — «Сохранить» остаётся закрытым"
+    };
+    var I18N_TITLE = null;
+    var LANG = "en";
+    try { LANG = localStorage.getItem("retainer-lang") === "ru" ? "ru" : "en"; } catch (e) { LANG = "en"; }
+
+    // Strings the script itself writes into the page go through here; the markup goes through
+    // applyLang below.
+    function tr(s) { var ru = I18N_RU[s]; return (LANG === "ru" && ru) ? ru : s; }
+
+    // Leaves only: on an element that holds no child element, textContent IS its own text — the one
+    // text API a browser and the suite's DOM double both provide.
+    function i18nLeaves(root) {
+      var out = [];
+      (function walk(el) {
+        var tag = el.tagName || "";
+        if (tag === "SCRIPT" || tag === "STYLE" || tag === "CODE" || tag === "KBD") { return; }
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "IMG" || tag === "BR") { return; }
+        var klass = String(el.className || "");
+        if (klass.indexOf("mono") >= 0) { return; }
+        if (klass.split(/\s+/).indexOf("lang") >= 0) { return; }
+        var kids = el.children || [];
+        if (!kids.length) { out.push(el); return; }
+        for (var i = 0; i < kids.length; i++) { walk(kids[i]); }
+      })(root);
+      return out;
+    }
+
+    // The English is remembered on the first pass — as the key itself, with runs of whitespace
+    // collapsed. Keeping the raw text as well would be a second copy that nothing can tell apart:
+    // markup whitespace is collapsed on render anyway, so the written form and the key look the same
+    // on screen.
+    function applyLang() {
+      var leaves = i18nLeaves(document.body), i, el, ru;
+      for (i = 0; i < leaves.length; i++) {
+        el = leaves[i];
+        if (el.i18nKey === undefined) {
+          el.i18nKey = String(el.textContent).replace(/\s+/g, " ").trim();
+        }
+        ru = I18N_RU[el.i18nKey];
+        el.textContent = (LANG === "ru" && ru) ? ru : el.i18nKey;
+      }
+      // The title sits outside body, where the leaf walk cannot reach it.
+      if (I18N_TITLE === null) { I18N_TITLE = String(document.title || ""); }
+      var ruTitle = I18N_RU[I18N_TITLE.replace(/\s+/g, " ").trim()];
+      document.title = (LANG === "ru" && ruTitle) ? ruTitle : I18N_TITLE;
+      document.documentElement.lang = LANG;
+      var buttons = document.querySelectorAll(".lang-btn"), j;
+      for (j = 0; j < buttons.length; j++) {
+        buttons[j].setAttribute("aria-pressed", buttons[j].getAttribute("data-lang") === LANG ? "true" : "false");
+      }
+    }
+    function pad(k) { return k.length >= 18 ? k + " " : (k + "                     ").slice(0, 18); }
+    function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+    // ── layer 1: the global config, common to every project ────────────────────────
+    var fields = ["tracker_url", "tracker_repo", "gitea_token_path", "deepseek_key_path"];
+    function tomlEsc(s) { return s.replace(/\\/g, "\\\\").replace(/"/g, "\\\""); }
+    // What a marathon makes of `ask` is shown only while marathon is the chosen level: outside it the
+    // notes describe a state that does not exist.
+    function showMarathon() {
+      var lv = document.querySelector('input[name="autonomy"]:checked');
+      document.getElementById("marathon-notes").hidden = !(lv && lv.value === "marathon");
+    }
+    function render() {
+      var lines = ['<span class="c"># global retainer config — ~/.config/retainer/config.toml</span>'];
+      fields.forEach(function (k) {
+        var v = (document.getElementById(k).value || "").trim();
+        lines.push('<span class="k">' + pad(k) + '</span>= <span class="v">"' + esc(tomlEsc(v)) + '"</span>');
+      });
+      var au = document.querySelector('input[name="autonomy"]:checked').value;
+      lines.push('<span class="k">' + pad("autonomy_level") + '</span>= <span class="v">"' + au + '"</span>');
+      var flow = ["flow_issue", "flow_branch", "flow_commit", "flow_pr", "flow_merge", "flow_cleanup", "flow_ask_owner", "flow_confirm_intake"];
+      var flowLines = [];
+      flow.forEach(function (f) {
+        var el = document.querySelector('input[name="' + f + '"]:checked');
+        var fv = el ? el.value : "";
+        if (fv) flowLines.push('<span class="k">' + pad(f) + '</span>= <span class="v">"' + fv + '"</span>');
+      });
+      if (flowLines.length) {
+        lines.push('');
+        lines.push('<span class="c"># git flow by step (unset = follows autonomy_level)</span>');
+        flowLines.forEach(function (l) { lines.push(l); });
+      }
+      var mode = document.querySelector('input[name="tools_mode"]:checked').value;
+      var toolLines = [];
+      if (mode !== "manual") {
+        toolLines.push('<span class="k">' + pad("tools_mode") + '</span>= <span class="v">"' + mode + '"</span>');
+      }
+      // Every per-tool key is written whatever the mode. Under a global mode the resolver honours only
+      // their `off`, but "Save" replaces the whole file: a key left out here would be gone when the
+      // owner returns to "per tool", and a switched-off tool would run again.
+      var tools = ["tool_code_reviewer", "tool_plan_checker", "tool_tester", "tool_second_opinion"];
+      tools.forEach(function (t) {
+        var el = document.querySelector('input[name="' + t + '"]:checked');
+        var v = el ? el.value : "ask";
+        toolLines.push('<span class="k">' + pad(t) + '</span>= <span class="v">"' + v + '"</span>');
+      });
+      if (toolLines.length) {
+        lines.push('');
+        lines.push('<span class="c"># when to call tools (off never · ask propose · auto by itself)</span>');
+        toolLines.forEach(function (l) { lines.push(l); });
+      }
+      lines.push('');
+      lines.push('<span class="c"># per-project checks live in each project\'s own .retainer/config.toml</span>');
+      document.getElementById("out").innerHTML = lines.join("\n");
+      showMarathon();
+    }
+    // Clearing an override by a repeated click is the way back to following the default.
+    // A click on a visible pill yields TWO events on the document: first with the span as target, then the
+    // label redirects the click to the input itself, and that redirect sets the mark back. So we clear
+    // on the LAST event of the chain — the one whose target is the input. Listeners are delegated: the
+    // input is hidden (opacity:0), mousedown reaches it only when it hits its 13 px in the pill corner.
+    // armed is disarmed by any foreign click, so arrow keys in a radio group, the right button and
+    // a release outside the button cannot clear the key. ONLY flow steps are covered: autonomy and
+    // tools have real defaults, and clearing the mark there would break config assembly.
+    var clearable = ["flow_issue", "flow_branch", "flow_commit", "flow_pr", "flow_merge", "flow_cleanup", "flow_ask_owner", "flow_confirm_intake"];
+    var armed = null;
+    function segInput(t) {
+      var l = t && t.closest && t.closest(".segmented label");
+      return l && l.querySelector('input[type="radio"]');
+    }
+    document.addEventListener("mousedown", function (e) {
+      var inp = e.button === 0 ? segInput(e.target) : null;
+      armed = (inp && clearable.indexOf(inp.name) >= 0 && inp.checked) ? inp : null;
+    });
+    document.addEventListener("click", function (e) {
+      var inp = segInput(e.target);
+      if (inp !== armed) { armed = null; return; }   // foreign click — disarm
+      if (e.target !== inp) { return; }              // this is still the span, wait for the redirected input click
+      armed = null;
+      inp.checked = false;                           // the key leaves the file
+      render();                                      // clearing the mark fires no change event
+    });
+
+    document.addEventListener("input", render);
+    document.addEventListener("change", render);
+    document.getElementById("copy").addEventListener("click", function () {
+      var txt = document.getElementById("out").textContent;
+      navigator.clipboard && navigator.clipboard.writeText(txt);
+      var b = this, old = b.textContent; b.textContent = tr("copied ✓");
+      setTimeout(function () { b.textContent = old; }, 1400);
+    });
+    document.getElementById("save").addEventListener("click", function () {
+      var b = this, old = b.textContent, txt = document.getElementById("out").textContent;
+      b.disabled = true; b.textContent = "…";
+      fetch("/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ config: txt + "\n" }) })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function () { b.textContent = tr("saved ✓"); })
+        .catch(function () { b.textContent = tr("no server — \"copy\""); })
+        .then(function () { b.disabled = false; setTimeout(function () { b.textContent = old; }, 2000); });
+    });
+    function parseFlat(text) {
+      var kv = {}, done = false;   // only flat keys BEFORE the first [table] — as bin/retainer-config.sh
+      (text || "").split("\n").forEach(function (line) {
+        if (/^\s*\[/.test(line)) done = true;
+        if (done) return;
+        var m = line.match(/^\s*([a-z_]+)\s*=\s*(.*)$/);
+        if (m) kv[m[1]] = tomlStr(m[2]);
+      });
+      return kv;
+    }
+    // The inverse of tomlEsc: a quoted value is read up to its closing quote and unescaped, so a
+    // backslash or a quote written once is read back once — not doubled on every save.
+    function tomlStr(raw) {
+      var q = String(raw).trim().match(/^"((?:[^"\\]|\\.)*)"/);
+      if (q) { return q[1].replace(/\\(["\\])/g, "$1"); }
+      return String(raw).replace(/\s*#.*$/, "").trim();
+    }
+    function setRadio(name, val) {
+      var el = document.querySelector('input[name="' + name + '"][value="' + val + '"]');
+      if (el) el.checked = true;
+    }
+    function loadConfig() {
+      fetch("/config").then(function (r) { return r.json(); }).then(function (d) {
+        var kv = parseFlat(d.config);
+        fields.forEach(function (k) { if (kv[k] != null) document.getElementById(k).value = kv[k]; });
+        if (kv.autonomy_level) setRadio("autonomy", kv.autonomy_level);
+        ["flow_issue", "flow_branch", "flow_commit", "flow_pr", "flow_merge", "flow_cleanup", "flow_ask_owner", "flow_confirm_intake"]
+          .forEach(function (f) { setRadio(f, kv[f]); });
+        setRadio("tools_mode", kv.tools_mode || "manual");
+        ["tool_code_reviewer", "tool_plan_checker", "tool_tester", "tool_second_opinion"]
+          .forEach(function (t) { setRadio(t, kv[t] || "ask"); });
+        render();
+      }).catch(function () { render(); });   // no server (file://) → just the defaults
+    }
+    // What the script last wrote into its live elements. The language switch restores every leaf to
+    // the text it held on the first pass — "…" or nothing for these — so after a switch they are
+    // written again from here, in the new language.
+    var live = { autonomy: null, projects: null, key: null, pstate: "", placeholder: "— project —" };
+    function renderAutonomy(s) {
+      live.autonomy = s;
+      if (s.down) { document.getElementById("pause-btn").textContent = tr("no server"); return; }
+      var badge = document.getElementById("conv-badge");
+      badge.textContent = tr(s.configured ? "configured" : "not configured");
+      badge.className = "badge " + (s.configured ? "live" : "dead");
+      var btn = document.getElementById("pause-btn");
+      btn.disabled = false;
+      btn.textContent = tr(s.paused ? "▶ Resume (paused)" : "⏸ Pause");
+    }
+    function loadAutonomy() {
+      fetch("/autonomy-status").then(function (r) { return r.json(); }).then(renderAutonomy)
+        .catch(function () { renderAutonomy({ down: true }); });
+    }
+    document.getElementById("pause-btn").addEventListener("click", function () {
+      this.disabled = true; this.textContent = "…";
+      fetch("/pause", { method: "POST", body: "{}" }).then(function (r) { return r.json(); })
+        .then(renderAutonomy).catch(function () { renderAutonomy({ down: true }); });
+    });
+    var KEY_LABELS = { set: "set", environment: "set in the environment", missing: "not set" };
+    function renderKey(d, note) {
+      live.key = { d: d, note: note };
+      var badge = document.getElementById("key-badge");
+      badge.textContent = tr(KEY_LABELS[d.deepseek] || "not set");
+      badge.className = "badge " + (d.deepseek === "missing" ? "dead" : "live");
+      document.getElementById("key-remove").disabled = d.deepseek !== "set";
+      if (d.deepseek === "environment") note = "The key comes from DEEPSEEK_API_KEY in the environment; it wins over the file.";
+      if (note) document.getElementById("key-hint").textContent = tr(note);
+    }
+    function keyFailed() {
+      live.key = false;
+      var badge = document.getElementById("key-badge");
+      badge.textContent = tr("no server"); badge.className = "badge dead";
+    }
+    function loadKey() {
+      fetch("/key-status").then(function (r) { return r.json(); })
+        .then(function (d) { renderKey(d); }).catch(keyFailed);
+    }
+    document.getElementById("key-save").addEventListener("click", function () {
+      var input = document.getElementById("deepseek-key-input");
+      fetch("/save-key", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: input.value }) })
+        .then(function (r) {
+          if (!r.ok) {
+            var why = r.status === 400
+              ? "Not saved: the key is empty, too long or holds spaces."
+              : "Not saved: the server could not write the key.";
+            if (live.key) { live.key.note = why; }
+            document.getElementById("key-hint").textContent = tr(why);
+            return null;
+          }
+          input.value = "";
+          return r.json();
+        })
+        .then(function (d) { if (d) renderKey(d, "Saved."); }).catch(keyFailed);
+    });
+    document.getElementById("key-remove").addEventListener("click", function () {
+      fetch("/delete-key", { method: "POST", body: "{}" }).then(function (r) { return r.json(); })
+        .then(function (d) { renderKey(d, "Removed."); }).catch(keyFailed);
+    });
+    function renderProjects(list) {
+      live.projects = list;
+      var badge = document.getElementById("repos-badge");
+      var what = document.getElementById("repos-what");
+      if (list === false) {
+        badge.textContent = tr("no server"); badge.className = "badge dead";
+        what.innerHTML = tr("Opened as <code>file://</code> — no live status. Launch via <code>retainer-settings.sh</code>.");
+      } else if (!list.length) {
+        badge.textContent = tr("list empty"); badge.className = "badge dead";
+        what.innerHTML = tr("The registry <code>~/.config/retainer/managed-repos</code> is empty — the sweeps see no project. To add: <code>retainer-register.sh add &lt;path&gt;</code>.");
+      } else {
+        badge.textContent = list.length + " " + tr("managed"); badge.className = "badge live";
+        what.innerHTML = tr("Managed:") + " " + list.map(function (p) { return "<code>" + esc(p.name) + "</code>"; }).join(" · ")
+          + tr(". The list is edited with <code>retainer-register.sh</code>.");
+      }
+    }
+    function loadProjects() {
+      fetch("/projects").then(function (r) { return r.json(); }).then(renderProjects)
+        .catch(function () { renderProjects(false); });
+    }
+
+    // ── layer 2: the [rigor] block of the chosen project ─────────────────────────
+    var order = ["hooks_check", "guard_registration", "doc_links", "agent_canon", "protected_copy", "bypass_alert", "hot_context", "remote_creds", "skills_catalog", "dependency_check", "deny_sync", "doc_claims", "runner_labels", "complexity_trace", "prose_lang", "prototype_debt", "glossary_terms", "practices_form", "secret_scan", "req_trace", "django_extras", "js_gate"];
+    var meta = {
+      hooks_check: { c: "git hooks connected" },
+      guard_registration: { c: "guard registered as a hook" },
+      doc_links: { c: "paths from instructions exist" },
+      agent_canon: { c: "cycle role not duplicated" },
+      protected_copy: { c: "no copy of protected rules" },
+      bypass_alert: { c: "repeated guard blocks" },
+      hot_context: { c: "size of mandatory reading" },
+      remote_creds: { c: "no credentials in the remote address" },
+      skills_catalog: { c: "skills catalogue built from the source" },
+      dependency_check: { c: "dependency manifest matches lock" },
+      deny_sync: { c: "protected and deny registries match" },
+      doc_claims: { c: "marked document claims" },
+      runner_labels: { c: "CI executor label is one per project" },
+      complexity_trace: { c: "a new component named its complexity decision" },
+      prose_lang: { c: "code prose in Latin script, user text not" },
+      prototype_debt: { c: "prototype marker carries a task number" },
+      glossary_terms: { c: "a term from code is defined in the glossary" },
+      practices_form: { c: "touched practice rule has address + date" },
+      secret_scan: { c: "basic | thorough | false" },
+      req_trace: { c: "basic | thorough | false" },
+      django_extras: { c: "djangofmt + check + migrations + services-purity" },
+      js_gate: { c: "node --check + biome + node:test" }
+    };
+    function state() {
+      var s = {};
+      document.querySelectorAll("input[data-key]").forEach(function (el) { s[el.dataset.key] = el.checked; });
+      s.secret_scan = document.querySelector('input[name="secretscan"]:checked').value;
+      s.req_trace = document.querySelector('input[name="reqtrace"]:checked').value;
+      return s;
+    }
+    // Whether a key is on: ONE definition per page. A gauge counting a handwritten
+    // sum of keys while the preview counts by order would be two parallel lists of one intent that drift
+    // silently, leaving some controls unable to move the number at all.
+    function isOn(s, k) {
+      if (k === "secret_scan" || k === "req_trace") { return s[k] !== "false"; }
+      return !!s[k];
+    }
+    // What the chosen project ALREADY declared, and what the owner has touched since that was read.
+    // Only these two go into the file. Writing a key nobody declared would decide FOR the project:
+    // for the self-gated steps the declaration itself is the decision, and for the rest an absent
+    // key runs at the runner default while an explicit `false` switches the step off.
+    var declared = {};
+    var touched = {};
+    var loaded = false;
+    // Before a project's state has arrived the preview is a TEMPLATE: the page's other use is
+    // copying the block by hand, and opened as file:// there is no server to read any project from.
+    // Once a project has been read the preview becomes exactly what "Save" will send.
+    function willWrite(k) { return !loaded || declared[k] || touched[k]; }
+    // The markup's own state, read ONCE before anything is loaded. An undeclared key has no value of
+    // its own in a project, so its control falls back to this — otherwise the second project chosen
+    // would show the first one's picture under its name, and the gauge would count that picture.
+    var markupState = state();
+    // The server answers the block text, header and all. This reads the keys out of it, stripping
+    // quotes and a trailing comment — the form of parseFlat above, except that one reads the flat
+    // keys BEFORE the first table and this one reads inside the table it is given.
+    function parseBlock(text) {
+      var kv = {};
+      String(text || "").split("\n").forEach(function (line) {
+        var m = line.match(/^\s*([A-Za-z_]\w*)\s*=\s*(.*)$/);
+        if (m) { kv[m[1]] = m[2].replace(/\s*#.*$/, "").trim().replace(/^"|"$/g, ""); }
+      });
+      return kv;
+    }
+    // Bars are born from the registry: their count is the denominator, not a coincidence with the markup.
+    (function buildBars() {
+      var bars = document.getElementById("g-bars");
+      bars.innerHTML = order.map(function () { return "<i></i>"; }).join("");
+      document.getElementById("g-all").textContent = order.length;
+    })();
+    function renderRigor() {
+      var s = state();
+      var rigorOn = order.filter(function (k) { return isOn(s, k); }).length;
+      document.getElementById("g-on").textContent = rigorOn;
+      document.querySelectorAll("#g-bars i").forEach(function (b, i) { b.classList.toggle("lit", i < rigorOn); });
+
+      var lines = ['<span class="c"># rigor controls — on top of the base, not below it</span>', '<span class="c">[rigor]</span>'];
+      order.forEach(function (k) {
+        if (!willWrite(k)) { return; }
+        var val, on = isOn(s, k);
+        if (k === "secret_scan" || k === "req_trace") { val = '"' + s[k] + '"'; }
+        else { val = String(s[k]); }
+        var cls = on ? "v-on" : "v-off";
+        lines.push('<span class="k">' + pad(k) + '</span>= <span class="' + cls + '">' + val + '</span>'
+          + '  <span class="c"># ' + meta[k].c + '</span>');
+      });
+      document.getElementById("rigor-out").innerHTML = lines.join("\n");
+
+      document.querySelectorAll("[data-stack]").forEach(function (card) {
+        var box = card.querySelector("input[data-key]");
+        card.classList.toggle("stack-off", !box.checked);
+      });
+    }
+    // ONE redraw path. A key is marked touched BEFORE the redraw, or the preview would be built from
+    // a state the owner has just changed while the key still counted as undeclared.
+    document.addEventListener("change", function (ev) {
+      var el = ev.target;
+      if (el === sel) { loadProject(); return; }
+      if (el && el.dataset && el.dataset.key) { touched[el.dataset.key] = true; }
+      if (el && el.name === "secretscan") { touched.secret_scan = true; }
+      if (el && el.name === "reqtrace") { touched.req_trace = true; }
+      renderRigor();
+    });
+    document.getElementById("rigor-copy").addEventListener("click", function () {
+      var txt = document.getElementById("rigor-out").textContent;
+      navigator.clipboard && navigator.clipboard.writeText(txt);
+      var b = this; var old = b.textContent; b.textContent = tr("copied ✓");
+      setTimeout(function () { b.textContent = old; }, 1400);
+    });
+
+    // project picker from the managed-repos registry + writing [rigor] into the chosen project (POST /save-rigor)
+    var sel = document.getElementById("proj");
+    var saveBtn = document.getElementById("rigor-save");
+    var ph = sel.querySelector("option");   // placeholder "— project —"
+    var pstate = document.getElementById("pstate");
+    // The picker is outside the language walk (a <select> is skipped whole), so its placeholder is
+    // written here, and again on every switch.
+    function setPlaceholder(key) { live.placeholder = key; ph.textContent = tr(key); }
+    // The state line is built from parts, so what is kept is the builder, not a finished string.
+    function setPstate(build) { live.pstate = build; pstate.textContent = typeof build === "function" ? build() : tr(build); }
+    saveBtn.disabled = true;   // nothing is chosen, so there is no state to overwrite yet
+    fetch("/projects").then(function (r) { return r.json(); }).then(function (list) {
+      list.forEach(function (p) {
+        var o = document.createElement("option"); o.value = p.path; o.textContent = p.name; sel.appendChild(o);
+      });
+      if (!list.length) { setPlaceholder("— registry empty: retainer-register.sh add —"); saveBtn.disabled = true; saveBtn.title = tr("no projects in managed-repos"); }
+    }).catch(function () { setPlaceholder("— no server (file://) —"); saveBtn.disabled = true; });
+
+    // Reading the chosen project BEFORE it can be overwritten. Until the reply arrives the page does
+    // not know what it is about to replace, so "Save" stays locked — a refusal and a dead server are
+    // the same answer here: the state is unknown.
+    function segName(k) { return k.replace(/_/g, ""); }
+    function setSeg(k, val) {
+      var group = document.querySelectorAll('input[name="' + segName(k) + '"]');
+      var hit = document.querySelector('input[name="' + segName(k) + '"][value="' + val + '"]');
+      if (!hit) { return false; }
+      group.forEach(function (one) { one.checked = false; });
+      hit.checked = true;
+      return true;
+    }
+    function resetControls() {
+      document.querySelectorAll("input[data-key]").forEach(function (el) {
+        el.checked = !!markupState[el.dataset.key];
+      });
+      setSeg("secret_scan", markupState.secret_scan);
+      setSeg("req_trace", markupState.req_trace);
+    }
+    function unread(why) {
+      // The reset lives HERE, so it happens before the request and on both degradations too: a
+      // refusal or a dead server must not leave the previous project's values on the controls, where
+      // the gauge would count them and `copy` would hand them over under the new project's name.
+      resetControls();
+      loaded = false;
+      saveBtn.disabled = true;
+      setPstate(why);
+      renderRigor();
+    }
+    function loadProject() {
+      declared = {};
+      touched = {};
+      if (!sel.value) { unread(""); return; }
+      // The project this reply is about. The server is threaded and the picker can move on while a
+      // reply is in flight, so an answer that arrives for a project no longer chosen is dropped:
+      // applying it would show one project's values and write them into another.
+      var asked = sel.value;
+      unread(function () { return tr("reading") + " " + asked; });
+      fetch("/rigor?project=" + encodeURIComponent(asked))
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (asked !== sel.value) { return; }
+          if (!d) { unread("outside the registry — Save stays locked"); return; }
+          var kv = parseBlock(d.rigor);
+          order.forEach(function (k) {
+            if (kv[k] === undefined) { return; }
+            var box = document.querySelector('input[type="checkbox"][data-key="' + k + '"]');
+            if (box) { box.checked = kv[k] !== "false"; declared[k] = true; return; }
+            // A value this page has no control for — an older vocabulary, a typo, a future word — is
+            // NOT claimed as read: left unmentioned, it keeps the project's own line, where claiming
+            // it would show a default and then write that default over the project's decision.
+            if (setSeg(k, kv[k])) { declared[k] = true; }
+          });
+          loaded = true;
+          saveBtn.disabled = false;
+          var n = 0;
+          order.forEach(function (k) { if (declared[k]) { n++; } });
+          setPstate(function () {
+            return n
+              ? tr("read") + " " + n + " " + tr("of") + " " + order.length + " " + tr("regulators from this project")
+              : tr("no decision recorded: this project declares no regulators, and Save adds only what you touch");
+          });
+          renderRigor();
+        })
+        .catch(function () {
+          if (asked === sel.value) { unread("no server — Save stays locked"); }
+        });
+    }
+    function flash(txt) { saveBtn.textContent = tr(txt); setTimeout(function () { saveBtn.textContent = tr("Save"); }, 1600); }
+    saveBtn.addEventListener("click", function () {
+      if (!sel.value) { flash("choose a project"); return; }
+      if (!loaded) { flash("not read yet"); return; }
+      var full = document.getElementById("rigor-out").textContent;
+      var at = full.indexOf("[rigor]");   // from [rigor] — without the leading comment, to avoid doubling
+      if (at < 0) { flash("no [rigor]"); return; }
+      var rigor = full.slice(at);
+      // Nothing declared and nothing touched: the block would be a bare header, and for a project
+      // with no config file at all the write would CREATE one, which is what makes a directory a
+      // managed repository. An untouched screen does not decide that.
+      if (rigor.indexOf("=") < 0) { flash("nothing to write"); return; }
+      fetch("/save-rigor", { method: "POST", body: JSON.stringify({ project: sel.value, rigor: rigor }) })
+        .then(function (r) { flash(r.ok ? "saved ✓" : tr("error") + " " + r.status); })
+        .catch(function () { flash("no server"); });
+    });
+
+    // ── language switch: both layers redraw ───────────────────────────────────────
+    // A handler per button rather than one on the group: delegation needs the event to bubble, and
+    // the gesture is then only observable where bubbling is modeled.
+    var langButtons = document.querySelectorAll(".lang-btn"), b;
+    for (b = 0; b < langButtons.length; b++) {
+      langButtons[b].addEventListener("click", function () {
+        var chosen = this.getAttribute("data-lang");
+        if (!chosen || chosen === LANG) { return; }
+        LANG = chosen;
+        try { localStorage.setItem("retainer-lang", LANG); } catch (e) { /* private window: the choice just does not persist */ }
+        applyLang();
+        render();
+        renderRigor();
+        if (live.autonomy) { renderAutonomy(live.autonomy); }
+        if (live.projects !== null) { renderProjects(live.projects); }
+        if (live.key) { renderKey(live.key.d, live.key.note); } else if (live.key === false) { keyFailed(); }
+        setPstate(live.pstate);
+        setPlaceholder(live.placeholder);
+      });
+    }
+    applyLang();
+    setPlaceholder(live.placeholder);
+    loadAutonomy();
+    loadKey();
+    loadProjects();
+    loadConfig();
+    renderRigor();
+  })();
+</script>

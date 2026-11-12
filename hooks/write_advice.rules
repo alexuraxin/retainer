@@ -1,0 +1,12 @@
+# Table of kinds of work for hooks/write_advice.py. One line is one rule, three fields:
+#
+#   <kind of work> | <target masks, comma-separated> | <skill>
+#
+# A mask is matched against the file NAME, not the path. A line starting with a hash is a comment.
+# Adding a kind of work means adding a line: the hook is not edited.
+#
+# Why the table lives here and not in the engine's config.toml: that file is machine-local, sits in
+# .gitignore and does not ship with the plugin — the table would never reach projects from there.
+
+markup | *.html,*.htm,*.css,*.scss,*.sass,*.less,*.jinja,*.jinja2,*.j2,*.vue,*.svelte | retainer:frontend-taste
+test | test_*.sh,test_*.py,*_test.py | retainer:test-generation

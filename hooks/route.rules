@@ -1,0 +1,38 @@
+# Table of cycle steps for bin/retainer-route.sh. One line is one step, five fields:
+#
+#   <step> | <gate> | <run needed here> | <the legitimate path> | <what counts as a bypass here>
+#
+# A line starting with a hash is a comment. A line with any other field count is skipped, so a
+# half-written step never half-works. Adding a step means adding a line: the script is not edited.
+#
+# <gate> names WHICH resolver answers for the step, because there are two and they take different
+# keys: `flow:<key>` goes to bin/retainer-flow-policy.sh, `tool:<code>` to bin/retainer-tool-policy.sh,
+# and `-` means the step has no regulator of its own. Guessing the resolver from the key would make
+# the route decide policy, which is not its job.
+#
+# THE TABLE IS SEEDED BY HAND from the two skills that own the route — skills/gitea-flow/SKILL.md
+# (the six flow steps) and skills/task-cycle/SKILL.md (the cycle steps). No machine reconciles them,
+# so changing a step list in a skill reddens nothing here.
+# defer: the table is reconciled with the skills by hand, upgrade: a step list diverging once in the wild
+#
+# THE ORDER OF THE LINES IS THE ORDER OF THE ROUTE: the script walks them top to bottom and the first
+# step that is not green is the next one. The six local steps come first and the four that need the
+# tracker come last, and that is deliberate: the walk stops at the first step that is not green, so
+# during most of the work no network call is made at all.
+#
+# Why the table lives here and not in the engine's config.toml: that file is machine-local, sits in
+# .gitignore and does not ship with the plugin — the table would never reach projects from there.
+# Why its own parse and not hooks/project_doc.py: that parser is fixed at three fields and this table
+# has five. The class "diverging parses of one truth" needs two readers of the SAME table, which is
+# not the case here — this table has one reader.
+
+issue | flow:issue | none | labelled issue created at once (priority, area, type, impact); readiness asked of retainer-ready-check.sh, never claimed by the label | filing the issue after the code; an empty labels list; reading the readiness label as proof
+plan | - | none | plan in the issue body with file addresses; plan-checker run; the plan-checked marker (retainer-state.sh path plan-checked) holds this task number, or a `plan-checked: <N>` comment on the task | "the plan is obvious"; code written before the marker; the role's verdict replaced by your own reading
+branch | flow:branch | none | retainer-task-start.sh: branch issue-N-slug off a fresh base, in-progress set, marker written, clock started | working on main; a generic branch name with no number; the marker left pointing at another task
+code | - | targeted run of the subject and a mutation probe; a cheap code-reviewer round is worth it here, before the commit | edits inside the declared files; a widening declared in the issue body where the readiness check reads | the full suite per hypothesis; a widening declared only in the pull request; a green claimed from the run before the last edit
+commit | flow:commit | targeted run green | message #N — …; small commits, each meaningful | --no-verify; a commit with no task number; a commit on a red subject
+push | - | what the project's pre-push declares (in the retainer engine itself: no tests on a branch push, the full suite runs once, in CI on the pull request) | git push of the task branch | --no-verify; tail on the push output, which hides which test failed; a push onto a branch whose phase is closed
+pr | flow:pr | none | pull request with Closes #N in the body and #N — … in the title | opening the pull request before the work on the branch is finished, where the merge gate can merge it on its own; pushing to a dead branch after a merge
+review | tool:code_reviewer | targeted run on the pull-request head | code-reviewer over the diff without your session history, on the head that will be merged; review-sha recorded for that head; review-clean set | a self-check reported as a review; a third round on a reworded old finding; the role skipped because the diff looks small
+merge | flow:merge | the gate green on the head that leaves | retainer-merge-ready.sh exit 0, then the merge-checker agent, then the merge-clean label, then the merge by head_commit_id with the SHA the lock named | a local git merge; a push of the branch onto main; a third transport for a request two layers already refused; deferring the rest of the work until the merge lands
+cleanup | flow:cleanup | none | retainer-task-close.sh --pr N until it exits 0; then main fast-forwarded, branch deleted, marker cleared | closing the task by hand instead of the command; PATCH state=closed as the whole of cleanup; deleting a branch in a tree another session holds

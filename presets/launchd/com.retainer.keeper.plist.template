@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- retainer keeper — "restarter" LaunchAgent: keeps the console alive AND drives the conveyor.
+     A superset of the conveyor agent (calls conveyor-poll itself) — load EITHER keeper OR conveyor, not both.
+     Substitute __RETAINER_HOME__/__HOME__/__INTERVAL__, put it at
+       ~/Library/LaunchAgents/com.retainer.keeper.plist, then:
+       launchctl load  ~/Library/LaunchAgents/com.retainer.keeper.plist
+       launchctl unload ~/Library/LaunchAgents/com.retainer.keeper.plist   # turn off
+     The console always comes up; the conveyor is inert until ~/.config/retainer/conveyor.conf is filled in. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.retainer.keeper</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__RETAINER_HOME__/bin/retainer-keeper.sh</string>
+    <string>--both</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>__INTERVAL__</integer>
+  <key>StandardOutPath</key>
+  <string>__HOME__/.cache/retainer/keeper.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/.cache/retainer/keeper.log</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <!-- launchd does NOT kill detached children (the console server) when the keeper job exits -->
+  <key>AbandonProcessGroup</key>
+  <true/>
+</dict>
+</plist>

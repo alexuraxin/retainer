@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# post-commit: project additions after a commit. The code graph is not rebuilt here: it lives in the
+# engine's state home and is rebuilt by the query itself (bin/retainer-graph.sh).
+# A Django project adds migrate + a runserver restart here (see presets/django).
+set -euo pipefail
+
+# Django module (uncomment in a Django project):
+# cd app
+# .venv/bin/python manage.py migrate --noinput >> runserver.log 2>&1 || true
+# pkill -f "manage.py runserver" || true
+# nohup .venv/bin/python manage.py runserver >> runserver.log 2>&1 &

@@ -1,0 +1,18 @@
+# complexity: keep, step 7 — without one list migrate and conformance would judge different copies
+# Kit copies a project holds verbatim from the box, read by bin/retainer-migrate.sh and
+# bin/retainer-conformance.sh. The project's .retainer/manifest keeps the sha256 of the box version
+# last delivered for each of them.
+#
+#   always   — installed when absent, where its top directory exists (`.gitea/` — the tracker is Gitea)
+#   present  — brought forward only where the project already has it: a stack preset
+#
+# Only verbatim copies belong here. A file the scaffold renders (a name or a runner substituted) or
+# a file the project owns after creation (gate.sh, practices.md, PROJECT.md) does not.
+#
+# mode    project path                    source under presets/
+always    .gitea/ISSUE_TEMPLATE/task.md   issue-template.task.md.template
+present   scripts/req-trace.sh            python/req-trace.sh.template
+present   scripts/secret-scan.sh          python/secret-scan.sh.template
+present   uv.toml                         python/uv.toml.template
+present   .editorconfig                   .editorconfig.template
+present   conftest.py                     python/conftest.py.template

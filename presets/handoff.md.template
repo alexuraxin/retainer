@@ -1,0 +1,37 @@
+# Entry point for a new session
+
+This file is **state**, not architecture. Architecture and pitfalls live in `PROJECT.md` and change
+rarely; here is everything that goes stale within a wave of work, and it is rewritten in full at the end of each wave,
+not appended at the bottom.
+
+Why: a session starting from the two words "continue" and a link here spends minutes on reconnaissance instead of
+an hour. The measured case — a run where the order of work, mines with addresses in the code and reversed earlier
+decisions lay in one place; without this every new session derives them anew and trips over the same thing a second time.
+
+## Where we are now
+
+- **Closed:** <what is finished and merged — briefly, without retelling the tasks>
+- **Next:** <task numbers in order, with one line "why this order">
+- **Do not touch:** <work someone else is doing right now>
+
+## Mines found by READING the code
+
+Only with addresses (`file:line`) and only what was verified by eye in the code. An assumption is not a mine:
+it will cost the next session a pass and save none.
+
+- `<path:line>` — <what is actually there and why it is a trap>
+
+## Exhausted budgets
+
+What the next task will run into if not known in advance: linter limits at the threshold, query counters
+with no headroom, files at the size limit. Measured case: the same module-members limit
+was hit three times in one session, and each time it was discovered AFTER the code was written.
+
+- `<what>` — <how much is left to the threshold>
+
+## Reversed decisions
+
+Decisions that look in force but are reversed. Without this list the next session reproduces
+them in good faith, by the document.
+
+- <what was reversed> → <what instead> (<when and by whom decided>)

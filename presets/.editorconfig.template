@@ -1,0 +1,23 @@
+# File shape is mechanical, not editor taste: width, indent and line ending are fixed here, so the
+# linter does not fight the editor on every save. The numbers match the preset `pyproject.toml`:
+# if they drift, the editor will break what the gate requires.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+max_line_length = 80
+
+# Markup with significant spaces: trimming trailing spaces breaks Markdown line breaks.
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{yml,yaml,json,toml}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab

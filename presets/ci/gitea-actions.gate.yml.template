@@ -1,0 +1,137 @@
+# CI: the same gate on an environment built FROM SCRATCH. This is a GUARANTEE (unlike the pre-push hook,
+# which can be bypassed with --no-verify and may be absent on another machine).
+# The scaffold puts it at <project>/.gitea/workflows/gate.yml and substitutes the runner. ⛔ Under the guard.
+#
+# The layout is FLAT (code at the repo root: scripts/gate.sh, requirements-dev.txt) — as in managed projects.
+# CI from scratch catches what the local run does not see: hand-built artifacts, the "supposedly impossible".
+#
+# The runner may be a host-executor with neither docker nor node, so checkout is MANUAL (git + workflow token),
+# with no JS actions: actions/checkout needs node in the runner daemon's PATH. There must be no `uses:` here
+# at all — on such a runner a JS action kills the job on the first line, before the run reaches any code.
+#
+# A GitLab project? The analogue is .gitlab-ci.yml with the same one line, `bash scripts/gate.sh`.
+# A GitHub project? The sibling template presets/ci/github-actions.gate.yml.template.
+#
+# RUNNER REQUIREMENT: the kit engine must be on its machine ($HOME/retainer or
+# RETAINER_HOME). The gate takes the run frame and the set of engine steps from there, and does not start
+# at all without it — it says so with exit code 1, because a run "without discipline but green" is worse than
+# no run. For a runner on your own machine: clone the engine into $HOME/retainer or set RETAINER_HOME --
+# the installed plugin lives in a versioned cache the runner does not look at.
+# A clean container needs the engine delivered by a separate step, otherwise CI goes red about something other than the project's code.
+
+name: gate
+# `push` — the integration branch only. On a working branch the push context is fully covered
+# by the PR context: Gitea gives both the same `github.sha`, so the jobs would run the same
+# tree twice, occupying the shared runner twice as long. A branch without a PR is left without a cloud check
+# deliberately: the flow is issue-first, a branch without a PR is not merged, and `pre-push` runs the gate on the machine.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: __RUNNER__          # the scaffold substitutes $RETAINER_RUNNER (default self-hosted)
+    steps:
+      - name: checkout (manual — no node)
+        run: |
+          git init -q .
+          git remote add origin "${{ github.server_url }}/${{ github.repository }}.git" \
+            || git remote set-url origin "${{ github.server_url }}/${{ github.repository }}.git"
+          # Shallow clone: everything project checks consume lives in the tree and HEAD
+          # (`git ls-files`, `git status`, `git grep`). Full history would buy a merge-base, but
+          # `origin/main` is absent after such a checkout anyway — branches are not fetched, only the sha.
+          # If a base is needed, it must be fetched by a separate step, as the engine workflow does.
+          git -c http.extraHeader="Authorization: token ${{ github.token }}" \
+            fetch -q --depth 1 origin "${{ github.sha }}"
+          git checkout -q -f "${{ github.sha }}"
+          # -x is mandatory: without it everything from .gitignore (.venv/, linter caches, .coverage) survives
+          # the checkout, and the header's "environment from scratch" stops being true — the venv is reused
+          # together with packages that are no longer in the manifest.
+          git clean -xfdq
+
+      - name: setup python venv
+        run: |
+          python3.12 -m venv .venv
+          .venv/bin/pip install -r requirements-dev.txt
+
+      - name: full gate
+        run: bash scripts/gate.sh
+
+      # Network part of the dependency check. The offline gate step compares the manifest with the lock; HERE
+      # goes what needs the network: the package exists on the index and its release is not
+      # a day old. The split is not cosmetic — the gate must work offline, and "no network" must not
+      # read as "dirty".
+      # Does not fail the build when the index is unreachable: network silence is not a finding. Fails only on a
+      # FACT (no such package / release fresher than the buffer), and the output says so in plain words.
+      - name: freshness and existence of dependencies (network)
+        if: hashFiles('pyproject.toml', 'requirements.txt') != ''
+        run: |
+          python3 - <<'PY'
+          import json, re, sys, urllib.error, urllib.request
+
+          import datetime
+
+          BUFFER_DAYS = 7
+
+          def _too_fresh(day, buffer_days):
+              try:
+                  when = datetime.date.fromisoformat(day)
+              except ValueError:
+                  return False
+              return (datetime.date.today() - when).days < buffer_days
+
+          NAME = re.compile(r"^[\s\"'-]*([A-Za-z][A-Za-z0-9._-]{1,60})")
+          names = set()
+          for manifest in ("pyproject.toml", "requirements.txt"):
+              try:
+                  lines = open(manifest, encoding="utf-8").read().splitlines()
+              except OSError:
+                  continue
+              for line in lines:
+                  if line.strip().startswith(("#", "[")) or not line.strip():
+                      continue
+                  hit = NAME.match(line)
+                  if hit and hit.group(1).lower() not in {
+                      "name", "version", "description", "requires", "dependencies", "true", "false",
+                  }:
+                      names.add(hit.group(1))
+          found = []
+          for name in sorted(names):
+              url = "https://pypi.org/pypi/{0}/json".format(name)
+              try:
+                  with urllib.request.urlopen(url, timeout=20) as resp:
+                      meta = json.load(resp)
+              except urllib.error.HTTPError as err:
+                  if err.code == 404:
+                      found.append("{0}: no such package on the index".format(name))
+                  continue
+              except OSError:
+                  continue          # index unreachable — not a finding
+              releases = meta.get("urls") or []
+              stamps = [str(row.get("upload_time") or "") for row in releases]
+              if stamps and max(stamps)[:10] and _too_fresh(max(stamps)[:10], BUFFER_DAYS):
+                  found.append("{0}: release fresher than {1} days".format(name, BUFFER_DAYS))
+          if found:
+              sys.stdout.write("\n".join("  ✗ " + row for row in found) + "\n")
+              sys.exit(1)
+          sys.stdout.write("▶ dependencies (network): {0} names checked, clean\n".format(len(names)))
+          PY
+
+  # PR watchdog: the gate result → label gate-passed/gate-failed on the linked PR.
+  # "Acceptance = GREEN gate", not "my part is done" (a signal for external agents/reviewer). The token needs issue access.
+  pr-watchdog:
+    needs: gate
+    if: always() && github.event_name == 'pull_request'
+    runs-on: __RUNNER__
+    steps:
+      - name: label PR by gate result
+        env:
+          TOKEN: ${{ secrets.GITEA_TOKEN || github.token }}
+          API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          RESULT: ${{ needs.gate.result }}
+        run: |
+          label=$([ "$RESULT" = "success" ] && echo gate-passed || echo gate-failed)
+          curl -sS -X POST -H "Authorization: token $TOKEN" -H "Content-Type: application/json" \
+            -d "{\"labels\":[\"$label\"]}" "$API/issues/$PR/labels" && echo "PR #$PR → $label"

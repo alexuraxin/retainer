@@ -1,0 +1,10 @@
+# uv: a buffer by release AGE.
+#
+# The only place where foreign code enters the project is an edit of the dependency manifest. A package name
+# may be invented by a model (and then someone has already registered it under that name — slopsquat),
+# and a release may be a day old. Poisoned npm and PyPI packages are usually caught within 1–3 days,
+# so a one-week buffer covers the window entirely.
+#
+# This is NOT a ban on fresh: the buffer shifts the permitting date, not the version. If a fresh version is urgently needed —
+# this value is edited, deliberately and visibly in the diff, not silently in the install command.
+exclude-newer = "7 days"

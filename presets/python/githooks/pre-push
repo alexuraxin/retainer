@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# pre-push: the gate as the first line. Faster than CI, catches earlier.
+# The GUARANTEE is not this hook (`git push --no-verify` bypasses it, and it is absent on another machine),
+# but CI with the same gate on an environment from scratch. The hook is a convenience, CI is the contract.
+#
+# Wired in via core.hooksPath (see githooks_setup.sh), not by copying into .git/hooks —
+# core.hooksPath replaces the directory ENTIRELY, so ALL of the project's hooks are here, not one.
+set -euo pipefail
+echo "▶ pre-push: running the gate…"
+bash app/scripts/gate.sh

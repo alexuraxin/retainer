@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 340" width="960" height="340" role="img" aria-label="How Retainer works: command, guard, code, done gate, review and gate, merge lock, main">
+  <style>
+    :root { --ink:#16181d; --paper:#ffffff; --mute:#636a75; --ok:#3dba6a; --no:#e5484d; --card:#f6f7f9; }
+    @media (prefers-color-scheme: dark) { :root { --ink:#e6e8ec; --paper:#0d1117; --mute:#9aa1ab; --card:#161b22; } }
+    .bg { fill: var(--paper); }
+    .ln { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .ic { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .node { fill: var(--paper); stroke: var(--ink); stroke-width: 5; }
+    .card { fill: var(--card); stroke: var(--ink); stroke-width: 3; }
+    .lbl { font: 600 16px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--ink); text-anchor: middle; }
+    .ttl { font: 700 17px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--ink); }
+    .knock { paint-order: stroke; stroke: var(--paper); stroke-width: 10px; stroke-linejoin: round; }
+    .sub { font: 400 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--mute); text-anchor: middle; }
+    .ret { fill: none; stroke: var(--mute); stroke-width: 3; stroke-dasharray: 2 8; stroke-linecap: round; }
+    .retlbl { font: 500 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--mute); text-anchor: middle; }
+    .mk { fill: none; stroke: var(--mute); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="mk" d="M1 1 L9 5 L1 9"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="960" height="340" rx="24"/>
+  <path class="ln" d="M70 176 H890"/>
+  <path class="ln" d="M210 218 V276"/>
+  <path class="ret" d="M630 130 C630 50, 334 50, 334 126" marker-end="url(#ah)"/>
+  <text class="retlbl knock" x="485" y="62.0">findings → back to code</text>
+  <path class="ret" d="M490 130 C490 94, 366 94, 366 126" marker-end="url(#ah)"/>
+  <text class="retlbl knock" x="428" y="95.0">red</text>
+  <circle class="node" cx="70" cy="176" r="40"/>
+  <g class="ic" transform="translate(70 176) scale(1.00)"><path d="M-18 -12 L-6 0 L-18 12 M0 14 H20"/></g>
+  <circle class="node" cx="210" cy="176" r="40"/>
+  <g class="ic" transform="translate(210 176) scale(1.00)"><path d="M0 -24 L20 -16 V0 C20 14 10 22 0 26 C-10 22 -20 14 -20 0 V-16 Z"/><path d="M-9 0 L-2 7 L10 -7"/></g>
+  <circle class="node" cx="350" cy="176" r="40"/>
+  <g class="ic" transform="translate(350 176) scale(1.00)"><path d="M-14 -12 L-26 0 L-14 12 M14 -12 L26 0 L14 12 M4 -16 L-4 16"/></g>
+  <circle class="node" cx="490" cy="176" r="40"/>
+  <g class="ic" transform="translate(490 176) scale(1.00)"><path d="M-8 -22 V2 L-20 20 H20 L8 2 V-22 M-12 -22 H12 M-14 12 H14"/></g>
+  <circle class="node" cx="630" cy="176" r="40"/>
+  <g class="ic" transform="translate(630 176) scale(1.00)"><circle cx="-5" cy="-5" r="13"/><path d="M5 5 L17 17"/></g>
+  <circle class="node" cx="770" cy="176" r="40"/>
+  <g class="ic" transform="translate(770 176) scale(1.00)"><rect x="-15" y="-3" width="30" height="22" rx="4"/><path d="M-8 -3 V-11 C-8 -23 8 -23 8 -11 V-3"/></g>
+  <circle cx="890" cy="176" r="42" fill="var(--ok)"/>
+  <path d="M872 177 L885 190 L909 164" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="lbl" x="70" y="246">Command</text>
+  <text class="lbl knock" x="210" y="246">Guard</text>
+  <text class="lbl" x="350" y="246">Code</text>
+  <text class="lbl" x="490" y="246">“Done” gate</text>
+  <text class="sub" x="490" y="266">tests for the change</text>
+  <text class="lbl" x="630" y="246">Review + gate</text>
+  <text class="lbl" x="770" y="246">Merge lock</text>
+  <text class="sub" x="770" y="266">green on this head</text>
+  <text class="lbl" x="890" y="246">main</text>
+  <circle cx="210" cy="302" r="26" fill="var(--no)"/>
+  <path d="M200 292 L220 312 M220 292 L200 312" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <text class="sub" x="248" y="307" style="text-anchor:start">irreversible → blocked, reason given</text>
+</svg>

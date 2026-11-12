@@ -1,0 +1,62 @@
+# <PROJECT> code and test practices
+
+`<project>/.retainer/practices.md`. Read by `code-reviewer` on the diff: a violation of a recorded practice
+is a finding. Where the plan role is wired to read practices, they apply to the PLAN too: a divergence of the
+plan from a recorded practice is a remark, a project prohibition is a contradiction.
+
+Every entry is backed by a file of existing code, not by taste. A practice without a sample address
+cannot be checked: the reader can neither confirm that this is really how the project writes, nor see
+the whole form. A practice derived from taste lives until the first dispute; a practice with an address lives until
+the file moves, and then it is updated.
+
+What goes into the document is the RULE and the ADDRESS, not a code quotation. A quotation goes stale silently and starts teaching
+a form that is no longer in the tree; an address goes stale visibly and gets updated.
+
+## Entry form
+
+    **<The rule in one phrase.>** <Why — what breaks without it.>
+    Sample: <file>:<line>   ·   Distilled: <date>
+
+- Distilled (the date the rule was taken from the code) is needed so staleness is visible to the
+  reader: an entry three years old with an address that moved is more honest to delete than to patch
+  at random.
+- An address that no longer exists invalidates the entry. If you find one — update the address or delete
+  the entry entirely; leaving a "rule without a sample" is not allowed, or the document becomes taste again.
+- A rule from review is written here ONLY when it is about a class, not a one-off mistake. A one-off
+  mistake goes to the project's error journal, not here.
+
+## Code
+
+The common layer — `${CLAUDE_PLUGIN_ROOT}/presets/python/forms/README.md`: sample forms for every kind
+of code plus the section "Where the decision lives and where the form lives" (value validation in the calculation layer, a type
+describes one layer, reading the request shape does not live in the handler, a layer name does not promise too much). For a
+Django project `${CLAUDE_PLUGIN_ROOT}/presets/django/README.md` is added to it. Here — only
+what is different or stricter in THIS project.
+
+<Empty on a new project — that is normal: there are no rules of its own yet, because there is no code to derive them
+from. The first entry appears with the first review finding that describes a rule.>
+
+## Tests
+
+The common layer — `${CLAUDE_PLUGIN_ROOT}/presets/python/tests.md`: a case starts from the business case, layout
+mirrors the code, the name names a scenario, next to "it worked" sits a counter-case, data comes through
+factories, the substitution mechanics live in the boundary fixture. Here — only what is different
+or stricter in THIS project.
+
+<…>
+
+## Task discipline
+
+The common layer — `${CLAUDE_PLUGIN_ROOT}/skills/receiving-review/SKILL.md` (how to accept a finding:
+verify before implementing, ask before assuming, and separately — a remark about a criterion
+is not removed by editing the criterion) and `${CLAUDE_PLUGIN_ROOT}/skills/task-cycle/SKILL.md` (order of
+steps and the form of the fork marker). Here — only what is different
+or stricter in THIS project.
+
+<Rules about the order of work, derived from the project's precedents: what must pass a live check before
+review, what counts as done.>
+
+---
+
+How it is filled in: the source of an entry is a review finding that described the rule, and the file where the rule
+is enforced. On an existing project the first pass derives practices from live code (`retrofit`).

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 300" width="1020" height="300" role="img" aria-label="The task cycle: issue, plan, plan check, code and tests, gate, review, PR, merge check, merge">
+  <style>
+    :root { --ink:#16181d; --paper:#ffffff; --mute:#636a75; --ok:#3dba6a; --no:#e5484d; --card:#f6f7f9; }
+    @media (prefers-color-scheme: dark) { :root { --ink:#e6e8ec; --paper:#0d1117; --mute:#9aa1ab; --card:#161b22; } }
+    .bg { fill: var(--paper); }
+    .ln { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .ic { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .node { fill: var(--paper); stroke: var(--ink); stroke-width: 5; }
+    .card { fill: var(--card); stroke: var(--ink); stroke-width: 3; }
+    .lbl { font: 600 16px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--ink); text-anchor: middle; }
+    .ttl { font: 700 17px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--ink); }
+    .knock { paint-order: stroke; stroke: var(--paper); stroke-width: 10px; stroke-linejoin: round; }
+    .sub { font: 400 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--mute); text-anchor: middle; }
+    .ret { fill: none; stroke: var(--mute); stroke-width: 3; stroke-dasharray: 2 8; stroke-linecap: round; }
+    .retlbl { font: 500 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--mute); text-anchor: middle; }
+    .mk { fill: none; stroke: var(--mute); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="mk" d="M1 1 L9 5 L1 9"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1020" height="300" rx="24"/>
+  <path class="ln" d="M66 176 H954"/>
+  <path class="ret" d="M288 130 C288 90, 177 90, 177 126" marker-end="url(#ah)"/>
+  <text class="retlbl knock" x="232.5" y="92.0">contradictions</text>
+  <path class="ret" d="M510 130 C510 90, 415 90, 415 126" marker-end="url(#ah)"/>
+  <text class="retlbl knock" x="462.5" y="92.0">red</text>
+  <path class="ret" d="M621 130 C621 46, 383 46, 383 126" marker-end="url(#ah)"/>
+  <text class="retlbl knock" x="502.0" y="59.0">findings</text>
+  <circle class="node" cx="66" cy="176" r="36"/>
+  <g class="ic" transform="translate(66 176) scale(0.90)"><path d="M-20 -14 H20 V-5 A5 5 0 0 0 20 5 V14 H-20 V5 A5 5 0 0 0 -20 -5 Z M-6 -11 V-7 M-6 -2 V2 M-6 7 V11"/></g>
+  <circle class="node" cx="177" cy="176" r="36"/>
+  <g class="ic" transform="translate(177 176) scale(0.90)"><rect x="-15" y="-19" width="30" height="38" rx="3"/><path d="M-6 -19 V-23 H6 V-19 M-9 -8 L-6 -5 L-2 -10 M2 -7 H9 M-9 3 L-6 6 L-2 1 M2 4 H9 M-9 12 H9"/></g>
+  <circle class="node" cx="288" cy="176" r="36"/>
+  <g class="ic" transform="translate(288 176) scale(0.90)"><rect x="-15" y="-19" width="30" height="38" rx="3"/><path d="M-6 -19 V-23 H6 V-19 M-8 1 L-2 7 L9 -6"/></g>
+  <circle class="node" cx="399" cy="176" r="36"/>
+  <g class="ic" transform="translate(399 176) scale(0.90)"><path d="M-14 -12 L-26 0 L-14 12 M14 -12 L26 0 L14 12 M4 -16 L-4 16"/></g>
+  <circle class="node" cx="510" cy="176" r="36"/>
+  <g class="ic" transform="translate(510 176) scale(0.90)"><path d="M-8 -22 V2 L-20 20 H20 L8 2 V-22 M-12 -22 H12 M-14 12 H14"/></g>
+  <circle class="node" cx="621" cy="176" r="36"/>
+  <g class="ic" transform="translate(621 176) scale(0.90)"><circle cx="-5" cy="-5" r="13"/><path d="M5 5 L17 17"/></g>
+  <circle class="node" cx="732" cy="176" r="36"/>
+  <g class="ic" transform="translate(732 176) scale(0.90)"><circle cx="-8" cy="-14" r="5"/><circle cx="-8" cy="14" r="5"/><circle cx="12" cy="-4" r="5"/><path d="M-8 -9 V9 M7 -2 C-1 0 -6 3 -8 9"/></g>
+  <circle class="node" cx="843" cy="176" r="36"/>
+  <g class="ic" transform="translate(843 176) scale(0.90)"><rect x="-15" y="-3" width="30" height="22" rx="4"/><path d="M-8 -3 V-11 C-8 -23 8 -23 8 -11 V-3"/></g>
+  <circle cx="954" cy="176" r="38" fill="var(--ok)"/>
+  <path d="M936 177 L949 190 L973 164" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="lbl" x="66" y="242">Issue</text>
+  <text class="sub" x="66" y="262">no code</text>
+  <text class="sub" x="66" y="279">without a task</text>
+  <text class="lbl" x="177" y="242">Plan</text>
+  <text class="sub" x="177" y="262">addresses, steps,</text>
+  <text class="sub" x="177" y="279">criteria</text>
+  <text class="lbl" x="288" y="242">Plan check</text>
+  <text class="sub" x="288" y="262">plan-checker</text>
+  <text class="lbl" x="399" y="242">Code</text>
+  <text class="sub" x="399" y="262">+ tests</text>
+  <text class="lbl" x="510" y="242">Gate</text>
+  <text class="sub" x="510" y="262">one command</text>
+  <text class="lbl" x="621" y="242">Review</text>
+  <text class="sub" x="621" y="262">code-reviewer</text>
+  <text class="lbl" x="732" y="242">PR</text>
+  <text class="sub" x="732" y="262">commit #N</text>
+  <text class="lbl" x="843" y="242">Merge check</text>
+  <text class="sub" x="843" y="262">merge-checker</text>
+  <text class="sub" x="843" y="279">+ merge lock</text>
+  <text class="lbl" x="954" y="242">Merge</text>
+  <text class="sub" x="954" y="262">lesson into</text>
+  <text class="sub" x="954" y="279">memory</text>
+</svg>

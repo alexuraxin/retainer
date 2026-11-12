@@ -1,0 +1,77 @@
+# Architecture contracts — machine check (import-linter).
+# Copy to <project>/app/.importlinter, fill in for your own domain layout.
+# ⛔ Under the guard once wired in. A contract violation cannot be "explained away with a comment" —
+#    it is a sign the seam between modules is drawn wrong.
+
+[importlinter]
+root_package = <root_package>
+# Required as soon as a forbidden module is EXTERNAL (django, celery, punq, tests): without it
+# import-linter refuses to parse the whole config — "must have include_external_packages=True
+# when there are external forbidden modules", and it is not a contract that fails but the entire gate step.
+include_external_packages = True
+
+# Example 1: layered architecture — upper layers depend on lower ones, not the other way round.
+[importlinter:contract:layers]
+name = Application layers
+type = layers
+layers =
+    <root_package>.views
+    <root_package>.services
+    <root_package>.models
+
+# Example 2: isolation — domain modules do NOT import each other.
+[importlinter:contract:independence]
+name = Domains are independent
+type = independence
+modules =
+    <root_package>.domain_a
+    <root_package>.domain_b
+
+# Example 3: pure layer — business logic knows NOT A SINGLE framework (LLM/calculations will come here).
+# The list is deliberately complete: banning one web framework leaves the layer a queue, a cache and an http client —
+# that is, the I/O because of which the logic can be neither read nor tested without an environment.
+[importlinter:contract:pure]
+name = Pure calculation layer
+type = forbidden
+source_modules =
+    <root_package>.services
+forbidden_modules =
+    django
+    celery
+    redis
+    httpx
+    requests
+    pydantic
+
+# Example 4: dependencies are resolved in the composition root, not inside adapters.
+# An adapter that pulls a dependency from the container itself can be replaced in a test only by
+# replacing global state — and the replacement hangs on the import address, not on the contract.
+[importlinter:contract:no-di-in-infra]
+name = Infrastructure does not resolve dependencies itself
+type = forbidden
+source_modules =
+    <root_package>.infra
+forbidden_modules =
+    punq
+    <root_package>.di
+
+# Example 5: settings are read through the access layer (in Django — `django.conf.settings`), not by a direct
+# import of the settings module. A direct import freezes the value at import time: replacement in a test
+# and environment override silently stop working.
+[importlinter:contract:settings-protected]
+name = Settings are imported only by settings
+type = protected
+protected_modules =
+    <root_package>.settings
+allowed_importers =
+    <root_package>.settings
+
+# Example 6: production does not import tests. An import from tests in a production module survives a local
+# run (tests are nearby) and fails in production, where there is no tests directory at all — while looking fine before that.
+[importlinter:contract:tests-restrictions]
+name = Production does not import tests
+type = forbidden
+source_modules =
+    <root_package>
+forbidden_modules =
+    tests

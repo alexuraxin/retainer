@@ -1,0 +1,151 @@
+# Strictness preset for ruff / mypy / pytest. Copy to <project>/app/pyproject.toml.
+# ⛔ Under the guard once wired in — an edit weakens the check, goes through the owner's key.
+
+[tool.ruff]
+# Width 80 and single quotes are not taste but what shapes every line: a template taken from a
+# production project on wemake-django-template. Width 99 gave denser lines, but it has no
+# second reader: 80 fits in a diff next to another diff and in a review on a narrow screen.
+line-length = 80
+target-version = "py312"
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+# Enabled strictly; relaxations are pointwise and recorded in the debt journal (RATCHET), not wholesale.
+# The set is taken from a production project: besides the basics it catches defect classes that otherwise only
+# review finds — boolean traps in signatures, dead commented-out code, naive dates, paths as
+# strings, broad except, the shape of a pytest case, hand-rolled access to private members.
+select = [
+  "A",    # flake8-builtins: a name shadows a builtin
+  "B",    # bugbear: typical traps
+  "C4",   # comprehensions
+  "C90",  # mccabe: cyclomatic complexity
+  "COM",  # commas
+  "D",    # pydocstyle: docstring required, tests included
+  "DTZ",  # naive dates without a zone
+  "E",    # pycodestyle
+  "ERA",  # commented-out code
+  "EXE",  # executability and shebang
+  "F",    # pyflakes
+  "FBT",  # boolean trap in a signature
+  "FLY",  # string joining
+  "FURB", # outdated forms
+  "G",    # log format
+  "I",    # import order
+  "ICN",  # import alias conventions
+  "ISC",  # implicit string concatenation
+  "LOG",  # logging
+  "N",    # pep8-naming
+  "PERF", # obvious performance losses
+  "PIE",  # superfluous
+  "PL",   # pylint
+  "PT",   # shape of a pytest case
+  "PTH",  # pathlib instead of os.path
+  "Q",    # quotes
+  "RET",  # shape of return
+  "RSE",  # shape of raise
+  "RUF",  # ruff's own rules
+  "S",    # bandit: security
+  "SIM",  # simplifications
+  "SLF",  # access to another object's private member
+  "SLOT", # __slots__ on subclasses
+  "T100", # forgotten debugger
+  "TRY",  # shape of exception handling
+  "UP",   # pyupgrade
+  "W",    # pycodestyle
+  "YTT",  # version comparison
+]
+ignore = [
+  "ISC001",   # conflicts with the formatter
+  "COM812",   # same: a trailing comma is the formatter's subject, not the linter's
+  "PLR09",    # its own complexity measure is in WPS, two measures argue
+  "PLR2004",  # "magic numbers" in tests are a normal form of a boundary
+  "TRY003",   # long exception messages: the reader needs the shape more
+]
+
+external = ["WPS"]  # WPS codes are judged by flake8; without this line ruff goes red on foreign noqa
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 6
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.lint.per-file-ignores]
+# A CASE docstring is mandatory on a par with production code: it states the behavior and names the defect class
+# the case guards (`presets/python/tests.md`). Exactly what does not belong to the rule is dropped:
+# the MODULE docstring (`D100`) and PACKAGE docstring (`D104`) — the rule does not require describing every test file and every
+# `__init__.py`, and a demand to "describe an empty `__init__.py`" teaches writing docstrings for the linter.
+"**/tests/**" = ["D100", "D104", "S101"]
+"**/tests.py" = ["D100", "D104", "S101"]
+
+[tool.mypy]
+strict = true              # "strict" must be true: 0 errors, no bare generics.
+plugins = []               # django-stubs is wired in by the preset's Django module.
+ignore_missing_imports = false
+# mypy does NOT respect .gitignore — keep venv/artifacts out of the check, otherwise `mypy .` drowns in site-packages.
+exclude = ['(^|/)\.venv/', '(^|/)build/', '(^|/)dist/']
+
+[tool.pytest.ini_options]
+# The coverage bar is 100, not "almost all": the uncovered percents are not a random tail but exactly the failure
+# branches (error handling, early exits, rollbacks) — the ones nobody writes tests for. A deliberate exclusion
+# is made with `# pragma: no cover` NEXT TO THE LINE and is visible in review; a share in the config is visible to nobody.
+# It must not be lowered; a temporary relaxation is a line in the debt journal (RATCHET).
+addopts = [
+  "--cov",
+  "--cov-branch",                            # without branches an `if` with no pass through `else` counts as covered
+  "--cov-report=term-missing:skip-covered",
+  "--cov-fail-under=100",
+  "--strict-markers",                        # a misspelled marker otherwise selects nothing and stays silent
+  "--strict-config",                         # a typo in a key of THIS section is otherwise silently ignored
+  "--doctest-modules",                       # a docstring example is executed, otherwise it goes stale and teaches untruth
+  # `--doctest-modules` IMPORTS every .py under the run root. A module that fails on import
+  # (settings without environment variables, generated code, an entry point) gives a COLLECTION error —
+  # the whole run goes red, not one test. Such directories are excluded explicitly:
+  #   "--ignore=docs", "--ignore=scripts"
+]
+
+# A warning is a breakage with an already assigned date. A run where it does not go red learns about it on
+# the day a dependency drops the old behavior. Pointwise exceptions go on the line below, with a reason.
+filterwarnings = ["error"]
+
+# An xfail that SUDDENLY passed stays green without strictness: a fixed bug does not return the test to service.
+xfail_strict = true
+
+# Baseline timeout (pytest-timeout). A hung test is otherwise not red but eternal: the run drops off at the
+# overall CI limit, and the culprit is not in the output. Keep it LOW — widened only by a marker (conftest.py).
+timeout = 6
+
+# Markers are declared here (`--strict-markers` rejects an undeclared one), the per-marker timeout
+# is attached by conftest.py. Its own marker = its own time limit, not a generally raised bar.
+markers = [
+  "slow: test longer than the baseline timeout — declared in the test itself",
+  "integration: a real call of an external system or a mock server",
+]
+
+# django: DJANGO_SETTINGS_MODULE = "<project>.settings" + "--fail-on-template-vars" (the preset's Django module)
+
+# ⚠ When copying the template BY HAND, add the coverage scope — otherwise `--cov` measures both the tests and
+# conftest itself, and the bar of 100 is unreachable by construction (the "marker found" branch does not run in a project
+# without slow tests). The `retainer new` scaffold appends this section itself:
+#   [tool.coverage.run]
+#   source = ["<root_package>"]
+
+[tool.coverage.report]
+# The bar of 100 is reachable only if it is named what NOT to cover. The key is `exclude_also`, NOT
+# `exclude_lines`: the latter REPLACES coverage's defaults entirely, and the first forgotten line silently
+# kills `# pragma: no cover` along with them — the bar stays the number 100, but the relaxation stops
+# working. Coverage's defaults already carry the pragma, `if TYPE_CHECKING:` and the ellipsis body; here is
+# only what they lack. Every line is a decision, not a setting nobody knows about.
+exclude_also = [
+  "raise NotImplementedError",   # a contract declaration, not behavior
+  "if __name__ == .__main__.:",  # script entry point
+  "@overload",                   # signature overload: it has no body
+  "class .*\\(Protocol\\):",     # a protocol is a call shape, no body
+]
+# A pointwise exclusion of a line is `# pragma: no cover` NEXT TO IT: visible in review and requires a line in the
+# debt journal (RATCHET). A share in the config is visible to nobody, which is why the bar is not lowered.

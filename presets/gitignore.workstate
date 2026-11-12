@@ -1,0 +1,18 @@
+# retainer working state: created during work by the harness, guard and gate. There is nothing
+# to version, and `git add -A` from the root would carry it into a commit and bring it back on every branch switch.
+#
+# A directory is written with a trailing slash: by this form the check against the kit asks git whether
+# a path is covered. Negations and wildcards are not placed here — coverage is not asked for them.
+.retainer/unlock
+.retainer/bypass.log
+.retainer/active-issue
+.retainer/plan-checked
+.retainer/guard_state/
+.retainer/handoff.md
+.claude/lock
+.claude/settings.local.json
+.claude/guard_state/
+.claude/worktrees/
+# Derived: the code graph of older setups lived here; it now lives in the engine's state home.
+graphify-out/
+.DS_Store

@@ -1,0 +1,25 @@
+# complexity: keep, step 7 — without it the first update replaces nothing on a tree from before the manifest
+# sha256 of every version the box ever shipped of a kit copy source: a copy with no manifest line that
+# equals one of them was never edited, so the first update may replace it. Append the new hash when a
+# source changes (tests/test_migrate.sh reddens otherwise).
+0f7cbeca2118707009a0215fecd912fdf9556cfeeeb90003d4d95b0c45edad6c  issue-template.task.md.template
+15068df6464b34addb4f6ddcf5268df047f5d9e6a1ec306feddf97227365044b  issue-template.task.md.template
+4e5eb414cd23e13b5c1544172128d667a679b99dc2ebdebbc72b9b81624ce866  issue-template.task.md.template
+86991c9292dd7b93617b3ad25982a2258ce66f9e7107aac4446a754ef9b31644  issue-template.task.md.template
+95f293b3dd909beb403e2dfdee24806e1d41d090e7eaf30cb8c596b1fc3877b3  issue-template.task.md.template
+da4c821917502f4855d6f22bcd644e8991f9f01309f0b68d3dffb80483e16f95  issue-template.task.md.template
+f11f90fa93ea798034d5fcd8409ce08f635111986e830d7ca126122c2f2f4264  issue-template.task.md.template
+51e80584f2d2abf96f2d1f0dd9bf76c044548105d992c2b6a69551ec8bacf6fd  python/req-trace.sh.template
+a992a2d2389c3d549b2f537a9abe1a5b37066b6c55f39b184d45026d59ddd557  python/req-trace.sh.template
+e2c507a7332eb08df726584698e73c40430576b40c96a7d894f38dbe1114aee1  python/req-trace.sh.template
+8d83a880318acf6a8734d2b6178706968e34a21051d5c155ece814a54869f707  python/secret-scan.sh.template
+a37b24dbbbd85dcb291007923a8f72e4594c8d26dced52fda52618a03873622d  python/secret-scan.sh.template
+e60cff557a0b7e10ae1f1b82e066a051e8871ea0fc4c1b82ebe3611e44bb9873  python/secret-scan.sh.template
+430c8322c9ec425ed90d4efb572284df227b66e9dcfa6882f86d2ad846381032  python/uv.toml.template
+7152eca73f63b40a23719ed463a782497d4583a08ac5f5e7897e6cf920ff76bc  python/uv.toml.template
+9190de52a61dcdc16cffd0cc65fb1377e7c7bde1c8ea03f76bd545660d9db874  .editorconfig.template
+cd93e9846037386d8e4891ff6c89cd2e19139576eb358e1df1ac42b0b22474ab  .editorconfig.template
+144015554e1ad5d465c4e45de94fef5ea482cf78db6a80203dd160c096c20c19  python/conftest.py.template
+492f92b07d938873accc74b8ec816fe1b243aaa73e7fa14e589ecb607e071327  python/conftest.py.template
+a6e735c75767d321d2061ef7e5d82de3fc8dcd46468f2bda72c1b848701aebe8  python/conftest.py.template
+e0801324ac4d826ef519a21eaa06cb615adf6d1afd07155fec994bd4dccd76d7  python/conftest.py.template

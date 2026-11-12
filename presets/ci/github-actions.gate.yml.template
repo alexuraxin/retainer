@@ -1,0 +1,138 @@
+# CI: the same gate on an environment built FROM SCRATCH, on GitHub Actions. This is a GUARANTEE
+# (unlike the pre-push hook, which can be bypassed with --no-verify and may be absent on another machine).
+# Copy it to <project>/.github/workflows/gate.yml. There is no placeholder to substitute, but the
+# label below has to AGREE with `[ci] runner_label` in the project's .retainer/config.toml: a gate step
+# compares every workflow against that line and reads .github/ too, so a project that keeps the
+# scaffold's `self-hosted` there gets a red gate naming a runner that exists.
+#
+# NOT under the guard by default, unlike its Gitea sibling: a project's `protected` list ships with
+# `.gitea/**` in it and nothing for `.github/**`, so this file can be weakened by whoever edits it.
+# Add `".github/**"` to `protected` in your own `.retainer/config.toml` to have it held the same way.
+#
+# The layout is FLAT (code at the repo root: scripts/gate.sh, requirements-dev.txt) — as in managed projects.
+# CI from scratch catches what the local run does not see: hand-built artifacts, the "supposedly impossible".
+#
+# SIBLING, NOT A REPLACEMENT: presets/ci/gitea-actions.gate.yml.template is the same gate for a Gitea
+# host runner. What differs here follows from the runner, not from taste:
+#   * checkout and the interpreter come from the platform's own actions — a GitHub-hosted runner
+#     carries node, so the manual git checkout its sibling is forced into buys nothing here, and the
+#     interpreter is asked for by version instead of being assumed present in a floating image;
+#   * the runner is `ubuntu-latest`, so there is no __RUNNER__ to substitute;
+#   * the engine is DELIVERED by a step: a hosted runner is a clean container and carries no plugin.
+#
+# RUNNER REQUIREMENT: the kit engine must be on the machine ($HOME/retainer or RETAINER_HOME). The
+# gate takes the run frame and the set of engine steps from there, and does not start at all without
+# it — it says so with exit code 1, because a run "without discipline but green" is worse than no run.
+# The delivery step below skips itself only when the engine is already at RETAINER_HOME or
+# $HOME/retainer -- the installed plugin's cache is neither; otherwise it fetches the engine from
+# RETAINER_SOURCE, as on a hosted runner.
+#
+# A hosted runner is a clean container, so the engine has to be fetched, and this file asserts NOTHING
+# about where it is fetchable from: the address is yours to set, in the repository variable
+# RETAINER_SOURCE, and the token for it in the secret RETAINER_TOKEN. A showcase may be private, a
+# project may prefer a fork, a mirror or a vendored copy. Unset, unreachable or not an engine — the
+# job goes RED on the delivery step and names which of the three it was. That is the intended outcome:
+# red here costs a run, while a green gate that never had the engine costs the discipline it claims.
+#
+# A pull request FROM A FORK gets no secrets on this platform, so a private source leaves every
+# outside contribution red on delivery with the configuration perfectly correct. Taking outside
+# contributions and keeping the source private are incompatible here: point RETAINER_SOURCE at a
+# public mirror, or accept that a fork's pull request is checked only after a maintainer pushes it.
+#
+# defer: no dependency-freshness network step, upgrade: the day a GitHub project needs the network
+# half of the dependency check — a second copy of the Gitea template's block would diverge from the
+# first and nothing would notice, while the gate's offline step already compares manifest with lock.
+
+name: gate
+# `push` — the integration branch only. On a working branch the push context is fully covered by the
+# pull-request context: both run the same tree, occupying a runner twice as long. A branch without a
+# pull request is left without a cloud check deliberately: the flow is issue-first, such a branch is
+# not merged, and `pre-push` runs the gate on the machine.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        # Default depth, no `with:` block. Measured in the engine frame and in the project gate
+        # template: not one step takes a merge base or a diff against the integration branch, so
+        # history would be fetched for nothing. A step that needs a base fetches it itself.
+
+      - name: python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: deliver the engine
+        env:
+          # Set `RETAINER_SOURCE` as a repository variable (Settings → Variables) to the clone URL of
+          # the engine, and add `RETAINER_TOKEN` as a secret if that source is private.
+          SOURCE: ${{ vars.RETAINER_SOURCE }}
+          TOKEN: ${{ secrets.RETAINER_TOKEN }}
+        run: |
+          set -eu
+          # The same resolution order the project gate uses (RETAINER_HOME first, then $HOME/retainer):
+          # a self-hosted runner that carries the engine elsewhere must not be sent to fetch one.
+          HOME_DIR="${RETAINER_HOME:-$HOME/retainer}"
+          if [ -d "$HOME_DIR/bin" ]; then
+            echo "engine already on the runner at $HOME_DIR — delivery skipped"
+            exit 0
+          fi
+          if [ -e "$HOME_DIR" ]; then
+            echo "✗ $HOME_DIR exists but holds no bin/ — a half-installed engine." >&2
+            echo "  Refusing rather than linking into it: a link would land INSIDE that directory" >&2
+            echo "  and the red would arrive two steps later, blamed on the gate." >&2
+            exit 1
+          fi
+          if [ -z "${SOURCE:-}" ]; then
+            echo "✗ no engine on the runner and RETAINER_SOURCE is not set." >&2
+            echo "  The gate takes its run frame from the engine and refuses to run without it." >&2
+            echo "  Set the repository variable RETAINER_SOURCE to the engine's clone URL" >&2
+            echo "  (and the secret RETAINER_TOKEN if that source is private)." >&2
+            exit 1
+          fi
+          # The token travels in a header, not in the URL: a credential inside the remote address
+          # settles in .git/config and leaks into every later log line that prints the remote. The
+          # header reaches git through the environment rather than `-c`, the form the engine's own
+          # publisher uses (bin/retainer-publish.sh): an argument is readable in the process list, and
+          # `-c` additionally travels in GIT_CONFIG_PARAMETERS into git's own child processes. The
+          # `basic x-access-token:` form is the one measured against this platform, and the one its
+          # checkout action uses. `printf` is a shell builtin, so the token reaches base64 through a
+          # pipe without ever becoming an argument of a separate process; a here-string would be just
+          # as safe but would append a newline INTO the encoded credential.
+          # A previous run that cloned something which was not an engine left the directory behind,
+          # and the next `git clone` would then fail into a non-empty directory with its own message —
+          # naming none of the three causes this step promises to name. Unreachable on a hosted
+          # runner, reachable on a runner of your own, which this template supports.
+          rm -rf "$HOME/retainer-source"
+          if [ -n "${TOKEN:-}" ]; then
+            hdr="AUTHORIZATION: basic $(printf '%s' "x-access-token:$TOKEN" | base64 | tr -d '\n')"
+            GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=http.extraHeader GIT_CONFIG_VALUE_0="$hdr" \
+              git clone -q --depth 1 "$SOURCE" "$HOME/retainer-source"
+          else
+            git clone -q --depth 1 "$SOURCE" "$HOME/retainer-source"
+          fi
+          # A showcase ships the BUILT kit in dist/; a development tree has the same layout at its
+          # root. Whichever arrived, point the gate at the directory that actually holds the frame.
+          for root in "$HOME/retainer-source/dist" "$HOME/retainer-source"; do
+            if [ -f "$root/bin/retainer-gate-frame.sh" ]; then
+              ln -s "$root" "$HOME_DIR"
+              echo "engine delivered: $root → $HOME_DIR"
+              exit 0
+            fi
+          done
+          echo "✗ the clone carries no bin/retainer-gate-frame.sh — RETAINER_SOURCE is not an engine" >&2
+          exit 1
+
+      - name: setup python venv
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements-dev.txt
+
+      - name: full gate
+        run: bash scripts/gate.sh

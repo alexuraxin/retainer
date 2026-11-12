@@ -1,0 +1,30 @@
+# Project context table — what to feed the agent and when. Same format as
+# hooks/write_advice.rules: one line — one rule, three fields separated by a vertical bar.
+#
+#   <when> | <target masks, comma-separated> | <project document section heading>
+#
+#   when = "start" — HOT CORE: the section is fed at session start, resume, after
+#           /clear and after compaction. The masks field of such lines is EMPTY: they are bound to the event,
+#           not to a write target.
+#   when = <kind of work> — COLD LAYER: the section is fed before a write to a file matching the
+#           mask. The mask is matched against the file NAME, not the path.
+#
+# The heading is matched by PREFIX: "Known pitfalls" matches both a short heading and
+# "## Known pitfalls / mines (do not rediscover…)". An exact match would require every
+# project to rewrite the tail character for character.
+#
+# THIS FILE IS THE ENGINE DEFAULT. A project declares its own in `<project>/.retainer/context.rules`, and
+# the project table REPLACES this one entirely — including the "start" lines. They cannot be forgotten there unnoticed:
+# the `hot_context` gate step goes red on a project table without the hot core.
+#
+# A line starting with a hash is a comment. Adding a rule means adding a line.
+
+start |  | What NOT to do
+start |  | Known pitfalls
+
+# COLD lines are absent here and cannot be present: the "kind of work → section" mapping is known only to the
+# project itself — in one, layout pitfalls live in "Known pitfalls", in another in a separate section.
+# The form is this (copy into `<project>/.retainer/context.rules` and edit for your headings):
+#
+#   layout    | *.html,*.htm,*.css,*.jinja2,*.vue | Layout pitfalls
+#   migrations | *.sql,000*.py                    | Known pitfalls

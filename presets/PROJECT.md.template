@@ -1,0 +1,81 @@
+# <PROJECT> — context for agents
+
+`<project>/.retainer/PROJECT.md`. What used to be scattered across CLAUDE.md/AGENTS.md as
+project specifics. Agents (plan-checker, code-reviewer, doc-updater, tester) read THIS
+file instead of hardcode. Keep it short: a rule, not a history (history goes to the journal/incidents).
+
+**Config and code are the source of truth.** Do not copy dependency versions, the set of gate steps,
+or lists of settings and apps here: a copy drifts from the original silently, and the agent believes the copy. Here go
+rules and decisions that the config does not show, and a pointer to the file with the exact answer.
+
+## What this project is (minimum context)
+
+<One paragraph: stack, essence, the main data invariant. Example: "Django + SQLite for describing
+HR processes. Invariant: the inline table is the data source, everything else (diagrams, Brief) is
+a derived view, not the other way round.">
+
+## Product architecture (do not violate silently)
+
+<Key rules of the model. Stages, if any. Who is responsible for what (RACI). What is what —
+output artifact vs input form.>
+
+## Use cases are first-class code objects
+
+Behavior a user can name is a separate class or function with a docstring in the use-case
+directory, not a branch inside the transport. The registry is built from these
+(`${CLAUDE_PLUGIN_ROOT}/bin/retainer-usecase-registry.sh <project directory>`), and the plan
+role uses it to judge whether a use case already does what is claimed. The layout is declared by the key `usecase_globs`;
+if not declared, the two most common are used.
+
+The first docstring line is the use-case description for the registry. A use-case directory without public names
+is printed by the registry as an EMPTY area: the section's behavior is described nowhere.
+
+## Data model
+
+<Do NOT hardcode fields as a list — they go stale. Point to: "the current model is
+`${CLAUDE_PLUGIN_ROOT}/bin/retainer-graph.sh explain "<Model>"` (the graph-first skill) + architecture.md (ERD)". Here go only invariants the graph will not show.>
+
+## What NOT to do (project prohibitions)
+
+- **Emptiness that is CORRECT is not "unfilled".** Do not invent a field absent from the source
+  and do not substitute something plausible: empty stays empty and is labelled in words on screen. Each
+  measured case would have cost the customer a falsehood — a substitution would attribute to the author a claim they
+  did not make; an unparsed date would go out as the decision date; "0 of 0" would read as under-filling
+  where there is nothing to enrich. A stub in the DATA is forbidden, an honest caption on the SCREEN is mandatory.
+- <…>
+- <…>
+
+## Known pitfalls / mines (do not rediscover, do not "fix" out of ignorance)
+
+- <Deliberate decisions that look unfinished. Example: "badge-orange is reused as a
+  progress-chip outside status semantics — do not replace with a semantic color without an issue".>
+- The list is incomplete — if you run into something similar (a strange decision that looks like a forgotten leftover) →
+  ask, do not fix silently.
+
+## Project triggers (tool BEFORE the event) — extend the base preset
+
+| Before | What to enable |
+|---|---|
+| <new screen/queryset> | <N+1 detector> |
+| <…> | <…> |
+
+## Project test style
+
+General rules — `${CLAUDE_PLUGIN_ROOT}/presets/python/tests.md`: test layout mirrors the code
+structure · the test name names a scenario, not a module · the docstring states the behavior · next to
+"it worked" sits the counter-case "and this must not work" · data comes through factories · a fake is an explicit
+class, not `Mock` · a dependency is replaced via DI, not `monkeypatch`.
+
+This project's code and test practices are in `.retainer/practices.md` (template —
+`${CLAUDE_PLUGIN_ROOT}/presets/practices.md.template`): `code-reviewer` reads them on the diff,
+`plan-checker` — where that reading is wired in.
+
+Here only what is different in THIS project:
+
+- <mirror roots, if the layout is not flat: which code directory corresponds to which test directory>
+- <which fixtures are shared and where they live>
+- <what counts as a slow test and which marker it gets>
+
+## Status legend (for doc-updater)
+
+<🔲 not started · 🔄 in progress · ✅ done — or your own.>

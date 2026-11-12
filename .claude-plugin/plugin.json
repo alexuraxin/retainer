@@ -1,0 +1,18 @@
+{
+  "name": "retainer",
+  "description": "Portable discipline engine for agent development: task cycle, one-command gate, project-aware guard, graph-first, Python toolchain. One home for the rules — plugs into any project.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Retainer"
+  },
+  "license": "MIT",
+  "keywords": [
+    "discipline",
+    "agents",
+    "guardrails",
+    "python",
+    "linters",
+    "workflow",
+    "gate"
+  ]
+}

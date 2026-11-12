@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="128" height="128" role="img" aria-label="Retainer">
+  <g fill="none" stroke="#111" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="6" y="6" width="500" height="500" rx="70" fill="#fff" stroke-width="7"/>
+    <path d="M40 262 H472" stroke-width="6"/>
+    <g stroke-width="6" fill="#fff">
+      <circle cx="44" cy="262" r="37"/>
+      <circle cx="152" cy="262" r="37"/>
+      <circle cx="260" cy="262" r="37"/>
+      <circle cx="368" cy="262" r="37"/>
+    </g>
+    <!-- ticket -->
+    <path d="M24 248 H64 V255 A7 7 0 0 0 64 269 V276 H24 V269 A7 7 0 0 0 24 255 Z" stroke-width="3.5"/>
+    <path d="M38 250 V253 M38 260 V264 M38 271 V274" stroke-width="3"/>
+    <!-- checklist -->
+    <rect x="137" y="243" width="30" height="38" rx="3" stroke-width="3.5"/>
+    <path d="M146 243 V239 H158 V243" stroke-width="3"/>
+    <path d="M142 254 L145 257 L149 251 M153 254 H162 M142 263 L145 266 L149 260 M153 263 H162 M142 272 L145 275 L149 269 M153 272 H162" stroke-width="2.6"/>
+    <!-- code -->
+    <path d="M248 252 L238 262 L248 272 M272 252 L282 262 L272 272 M264 248 L256 276" stroke-width="4"/>
+    <!-- clamp around the merge node -->
+    <path d="M328 300 C320 260 322 232 336 220 C350 208 386 208 400 220 C414 232 416 260 408 300" stroke-width="6"/>
+    <path d="M362 218 V186 M374 218 V186" stroke-width="5"/>
+    <rect x="352" y="174" width="32" height="12" rx="5" stroke-width="5"/>
+    <!-- branch -->
+    <circle cx="358" cy="248" r="5" stroke-width="3"/>
+    <circle cx="358" cy="278" r="5" stroke-width="3"/>
+    <circle cx="380" cy="258" r="5" stroke-width="3"/>
+    <path d="M358 253 V273 M375 260 C366 262 360 264 358 270" stroke-width="3"/>
+  </g>
+  <circle cx="470" cy="262" r="37" fill="#3dba6a"/>
+  <path d="M453 263 L465 275 L488 250" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

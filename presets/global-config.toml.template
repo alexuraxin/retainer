@@ -1,0 +1,52 @@
+# Global retainer config — put it at ~/.config/retainer/config.toml (owner, in their own terminal).
+# Sits on top of per-project .retainer/. Change here → applies in ALL projects with retainer, no copy-paste.
+# Read by bin/retainer-config.sh (flat keys BEFORE the first [table]). Secrets — only file paths, not values.
+
+# Tracker for auto-tasks on discipline incidents and for syncing the bypass journal.
+tracker_url  = "http://localhost:3000"
+tracker_repo = "<owner>/<repo>"               # your tracker's repository; replace before use
+
+# Paths to secrets (chmod 600, outside git) — NOT the values themselves.
+gitea_token_path   = "~/.config/retainer/gitea_token"
+deepseek_key_path  = "~/.config/retainer/deepseek_key"
+
+# Agent autonomy level: manual | assisted | auto | marathon.
+#   marathon — a long autonomous run: no step stops, including merge, and the agent asks
+#   no blocking questions. A fork goes into the task marked "open question", where the
+#   options and the chosen default are recorded, and work continues on the default: idle time costs more than
+#   a wrong default — a default is fixed by the next task, a night of waiting is fixed by nothing.
+#   Checks remain: autonomy removes questions, not the gate and not review.
+autonomy_level = "assisted"
+
+# Per-step flow gates: auto | ask | off — each step of the cycle is controlled separately.
+# Not set → the default is derived from autonomy_level (resolver bin/retainer-flow-policy.sh). Uncomment to override.
+# flow_issue   = "ask"    # create a tracking issue (outward write)
+# flow_branch  = "auto"   # branch issue-NNN
+# flow_commit  = "auto"   # commits #NNN
+# flow_pr      = "ask"    # open a PR (outward write)
+# flow_merge   = "off"    # merge the PR: outside a marathon it belongs to the owner — enable deliberately
+# flow_cleanup = "auto"   # close issue/PR, remove label, sync main
+#
+# A separate gate: may work be stopped with a question to the owner. Values are only auto and off
+# ("ask" is meaningless here — it would be permission to ask for permission). Outside a marathon auto, in a marathon off.
+# flow_ask_owner = "auto"  # off — questions are forbidden, a fork goes into an open-question task
+
+# Rules for calling heavy tools: off | ask | auto (resolver bin/retainer-tool-policy.sh).
+#   off — not used · ask — I PROPOSE and wait for "ok" · auto — I call it myself whenever needed.
+# General mode tools_mode: always_ask (all ask) | always_auto (all auto) | manual (per tool, default).
+# Under either general mode a tool_<name> = "off" stays off. In manual every tool_<name> defaults to ask;
+# override individually. Not tied to autonomy_level — except the marathon: there "propose and wait for ok"
+# is unworkable (nobody to wait for), so any ask, written or default, turns by itself into a decision —
+# auto for plan checking, off for heavy and outward-going tools.
+# One pair the marathon decides itself, and the key does not open it: review is always on there — otherwise
+# unreviewed code goes to main by auto-merge.
+# tools_mode          = "manual"
+# tool_code_reviewer  = "ask"    # check the diff before commit
+# tool_plan_checker   = "ask"    # check the plan before code
+# tool_tester         = "ask"    # browser frontend tester (after UI edits)
+# tool_second_opinion = "ask"    # a second opinion from another model (important/irreversible step)
+
+# The registry of managed projects lives SEPARATELY as a plain list of paths:
+#   ~/.config/retainer/managed-repos   — one absolute repo path per line.
+# Sweeps (digest, registry-vs-disk check) and the settings console go by it;
+# not duplicated here, so the list has a single form of record.

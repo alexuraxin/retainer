@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# pre-commit: a fast subset (ruff format+check + codespell — seconds), so new code is born
+# formatted and clean at COMMIT. The full box (mypy/WPS/import-linter/pytest) — on pre-push/CI.
+# The retainer-new scaffold writes its own inline version with the real package; this is a reference.
+# No venv (fresh clone) → soft skip: the guarantee comes from pre-push/CI, not from this hook.
+set -euo pipefail
+PKG="core"   # ← the project's package directory (edit for your layout; the scaffold substitutes it automatically)
+[ -x .venv/bin/ruff ] || { echo "▶ pre-commit: no .venv — skipping (gate on pre-push/CI)"; exit 0; }
+.venv/bin/ruff format --check "$PKG" tests
+.venv/bin/ruff check "$PKG" tests
+.venv/bin/codespell "$PKG" tests

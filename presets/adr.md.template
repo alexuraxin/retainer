@@ -1,0 +1,35 @@
+# ADR-<NNNN>: <the decision in one line, present tense>
+
+Author: <who> · Task: <#N> · Date: <YYYY-MM-DD> · Updated: <YYYY-MM-DD>
+
+Copy to `docs/adr/<NNNN>-<short-slug>.md`. Four sections, none extra: a long ADR
+is not written while designing but added afterwards from memory — and then it repeats what is already
+visible in the code. The circumstances of the case live inside "Why", not in a separate section.
+
+## Decision
+
+What was decided — a list, present tense, no justification. Readable in ten seconds by someone
+who came to learn "how we do it here".
+
+## Why
+
+The measurement, constraint or cost that makes the decision what it is. Also here — the circumstances
+in which the choice was made: what was in the system, what got in the way, what was feared. Reasoning without a fact ("it is
+cleaner") means the decision was not chosen but just happened.
+
+## Alternatives
+
+Each one a line: what was considered and why it did not fit. An empty section is more honest than an invented one: it says
+alternatives were not sought, and the next reader will see that.
+
+## Risks
+
+What we pay: what becomes more expensive, slower or more fragile; under what condition the decision must be reversed.
+An empty section = risks were not sought — that is also information, and it should not be hidden.
+
+---
+
+When an ADR is NOT created: the decision is reversible and cheap; the subject is taste, not a choice with a cost; the rule is already
+recorded where a machine reads it (linter config, import contract, gate step). The record is kept
+AS the decision is made: an ADR added afterwards from memory repeats what is visible in the code, and an empty
+"Alternatives" section is more honest than an invented one.

@@ -1,0 +1,56 @@
+"""Pytest configuration. Copy as ``conftest.py`` NEXT TO ``pyproject.toml``.
+
+Pytest decides where this file lives: it looks for conftest from its own
+rootdir, and a file above rootdir is not picked up at all. A project needs ONE
+configuration conftest — two of them drift apart silently, and which one applies
+to a given test is visible only from the directory layout.
+
+The base test timeout lives in ``pyproject.toml`` (key ``timeout``) and stays
+LOW. A test that needs more gets it from a marker, so the demand for time is
+declared in the test itself. A limit raised for everyone hides the one test that
+started to crawl.
+"""
+
+import types
+from typing import Final
+
+import pytest
+
+#: Marker to timeout, in seconds. The marker must also be declared in
+#: ``pyproject.toml`` (``markers``), otherwise ``--strict-markers`` rejects it;
+#: here it is given its price in time.
+_MARKER_TIMEOUTS: Final = types.MappingProxyType(
+    {
+        'slow': 15,
+        'integration': 30,
+    },
+)
+
+
+def pytest_collection_modifyitems(
+    items: list[pytest.Item],  # noqa: WPS110 - name fixed by pytest
+) -> None:
+    """Attach a timeout by marker (the argument name is fixed by pytest)."""
+    for collected in items:
+        # An explicit `@pytest.mark.timeout(<seconds>)` is left alone: the
+        # author's own limit wins over ours. A marker WITHOUT a value
+        # (`timeout(func_only=True)`) sets a mode, not a limit: skipping on it
+        # drops the test to the base timeout and disables `slow` silently.
+        own = collected.get_closest_marker(name='timeout')
+        if own is not None and (own.args or 'timeout' in own.kwargs):
+            continue
+        # The LARGEST match wins, not the last one: a test with two markers
+        # would otherwise take the timeout of whichever line sits lower in the
+        # mapping, and reordering lines would change its limit silently.
+        timeouts = [
+            timeout
+            for marker_name, timeout in _MARKER_TIMEOUTS.items()
+            if collected.get_closest_marker(name=marker_name)
+        ]
+        if timeouts:
+            # append=False matters: `add_marker` appends BY DEFAULT, while
+            # `get_closest_marker` walks the list FORWARD — our marker would end
+            # up last, and a foreign valueless `timeout(...)` would win.
+            collected.add_marker(
+                pytest.mark.timeout(max(timeouts)), append=False
+            )

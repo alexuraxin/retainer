@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Requirement tracing req:ID + spec-drift detection. Called by gate.sh (step req_trace) and by a test.
+# Requirements: .retainer/requirements.md (lines `R-<n>: text`). Tags: `req: R-<n>` in code/tests.
+# Arguments: <repo_dir> <level: basic|thorough>. basic — advisory (exit 0); thorough — fails (exit 1).
+# Boundary: git grep = tree/HEAD.
+set -uo pipefail
+DIR="${1:-.}"; LEVEL="${2:-basic}"
+cd "$DIR" 2>/dev/null || { echo "  req_trace: no directory $DIR — skipping"; exit 0; }
+MANIFEST=".retainer/requirements.md"
+[ -f "$MANIFEST" ] || { echo "  req_trace: no $MANIFEST — skipping"; exit 0; }
+
+# R-IDs from the manifest (lines starting with R-<digits>:)
+ids="$(grep -oE '^R-[0-9]+:' "$MANIFEST" 2>/dev/null | tr -d ':' | sort -u || true)"
+
+# path<TAB>R-ID pairs from the tags (except the manifest). Each `req:` captures ITS OWN comma-separated
+# list of R-<n> and stops at the first non-(R-ID|,|space) character → prose after the tag and a second `req:` on the line
+# do not mix (otherwise false orphans / loss of the first ID under thorough).
+pairs="$(git grep -nIE 'req:[[:space:]]*R-[0-9]+' -- . ":(exclude)$MANIFEST" 2>/dev/null | awk -F: '
+{
+  path=$1; content=$0; sub(/^[^:]*:[^:]*:/,"",content)
+  while (match(content, /req:[[:space:]]*R-[0-9]+([[:space:]]*,[[:space:]]*R-[0-9]+)*/)) {
+    grp=substr(content, RSTART, RLENGTH); content=substr(content, RSTART+RLENGTH)
+    while (match(grp, /R-[0-9]+/)) { print path "\t" substr(grp,RSTART,RLENGTH); grp=substr(grp,RSTART+RLENGTH) }
+  }
+}')"
+
+is_test() { printf '%s' "$1" | grep -qE '(^|/)tests?/|(^|/)test_[^/]*$|_test\.[A-Za-z0-9]+$|\.test\.[A-Za-z0-9]+$|\.spec\.[A-Za-z0-9]+$'; }
+
+probs="$(mktemp)"; trap 'rm -f "$probs"' EXIT
+# uncovered R-IDs (need BOTH a code ref AND a test ref)
+for id in $ids; do
+  code=0; tst=0
+  while IFS="$(printf '\t')" read -r p rid; do
+    [ "$rid" = "$id" ] || continue
+    if is_test "$p"; then tst=1; else code=1; fi
+  done <<EOF
+$pairs
+EOF
+  if [ "$code" = 0 ] || [ "$tst" = 0 ]; then
+    miss=""; [ "$code" = 0 ] && miss="code"; [ "$tst" = 0 ] && miss="${miss:+$miss+}test"
+    echo "  ✗ $id — no reference: $miss" >> "$probs"
+  fi
+done
+# orphans: a tag on an R-ID that is not in the manifest (= drift)
+reffed="$(printf '%s\n' "$pairs" | awk -F"$(printf '\t')" 'NF>1{print $2}' | sort -u)"
+for rid in $reffed; do
+  [ -n "$rid" ] || continue
+  printf '%s\n' "$ids" | grep -qx "$rid" || echo "  ✗ orphan $rid — tag present, requirement not in the manifest (drift)" >> "$probs"
+done
+
+if [ -s "$probs" ]; then
+  echo "  req:ID tracing — mismatches:"; cat "$probs"; rm -f "$probs"
+  if [ "$LEVEL" = thorough ]; then echo "  (thorough → gate red)"; exit 1; fi
+  echo "  (basic → advisory, not failing the gate)"; exit 0
+fi
+rm -f "$probs"
+echo "  req:ID — requirements covered, no orphans ✓"; exit 0

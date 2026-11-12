@@ -1,0 +1,77 @@
+# CI: the merge lock of a project. It publishes the verdict of the engine's `retainer-merge-ready.sh`
+# as the commit status `retainer/merge-lock` on the pull request head. The gated merge path and branch
+# protection read that status; without this workflow nothing in the project writes it, and both wait
+# for ever. The scaffold puts it at <project>/.gitea/workflows/merge-lock.yml next to gate.yml and
+# substitutes the runner.
+#
+# NO CHECKOUT. The lock reads the tracker only: the pull request, its task, the comments and the
+# commit statuses. The project tree is not needed, and checking out the PR head would let a branch run
+# its own edited lock. The lock code comes from the engine on the runner instead.
+#
+# RUNNER REQUIREMENT: the kit engine must be on its machine ($HOME/retainer or RETAINER_HOME), the same
+# place the gate takes it from. Without it the job goes red and names the path: a lock that cannot run
+# leaves the merge closed, and a red job is the only place that says why. The lock runs whatever the
+# engine checkout on the runner holds, exactly as the gate does.
+#
+# GATE NAME REQUIREMENT: the project's gate workflow is `name: gate` with the job `gate`, as the gate
+# template lays it. The lock waits for the context `gate / gate (pull_request)` and recomputes when a
+# run of `gate` completes; a gate named otherwise is never seen, and the lock refuses for ever.
+# Preflight reports that divergence.
+#
+# Triggers, the job condition, the env map, the concurrency key and the call block repeat the engine's
+# own `.gitea/workflows/merge-lock.yml`, which explains each of them; a test runs both through one check.
+name: merge-lock
+on:
+  issue_comment:
+    types: [created, edited]
+  workflow_run:
+    workflows: [gate, gate.yml]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "PR number"
+        required: true
+
+concurrency:
+  group: merge-lock-${{ github.event.issue.number || github.event.inputs.pr || github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
+
+jobs:
+  lock:
+    runs-on: __RUNNER__          # the scaffold substitutes $RETAINER_RUNNER (default self-hosted)
+    if: github.event.inputs.pr != '' || github.event.issue.pull_request || github.event_name == 'workflow_run'
+    steps:
+      - name: verdict of the lock → commit status
+        env:
+          GITEA_TOKEN: ${{ github.token }}
+          MERGE_LOCK_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
+          LOCK_REPO: ${{ github.repository }}
+          MERGE_READY_REQUIRE_CONTEXT: gate / gate (pull_request)
+          EVENT_PR: ${{ github.event.issue.number }}
+          INPUT_PR: ${{ github.event.inputs.pr }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_RESULT: ${{ github.event.workflow_run.conclusion }}
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+        run: |
+          # ── LOCK CALL #724 (executed by tests/test_merge_lock.sh, not grepped) ──
+          if [ -n "$RUN_RESULT" ] && [ "$RUN_RESULT" != success ]; then
+            echo "gate run finished as «$RUN_RESULT» — nothing to recompute"
+            exit 0
+          fi
+          if [ "$RUN_EVENT" = push ]; then
+            echo "run raised by a push, not a pull request — nothing to lock"
+            exit 0
+          fi
+          pr="${INPUT_PR:-${EVENT_PR:-$RUN_SHA}}"
+          if [ -z "$pr" ]; then
+            echo "✗ the event named neither a PR number nor the run head — nothing to lock, but silence is not allowed"
+            exit 1
+          fi
+          engine="${RETAINER_HOME:-$HOME/retainer}"
+          if [ ! -f "$engine/bin/retainer-merge-lock.sh" ]; then
+            echo "✗ no engine at $engine (RETAINER_HOME or ~/retainer) — the lock cannot run, merge stays closed"
+            exit 1
+          fi
+          bash "$engine/bin/retainer-merge-lock.sh" "$LOCK_REPO" "$pr"
+          # ── /LOCK CALL #724 ──

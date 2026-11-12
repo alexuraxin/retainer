@@ -1,0 +1,38 @@
+#!/bin/sh
+# retainer: run a hook under a real python3; without one, stay out of the way and say so at session start.
+#
+#   retainer-python <hook.py> [args]   exec python3 with the hook — stdin, output and exit code pass through
+#   retainer-python --check            exit 0 when a real python3 is present, 1 otherwise
+#
+# complexity: keep, step 7 — on a clean Mac python3 is a stub that opens a dialog and fails every hook
+#
+# The stub is never executed: on macOS a python3 inside the stub directory counts only when the Apple
+# developer tools are installed (`xcode-select -p`). Elsewhere there are no stubs, and presence is enough.
+# Without python3 every hook exits 0: a hook that fails on each call blocks nothing and floods the
+# session, while the session-start hook tells the owner once that protection is off.
+
+real_python() {
+  found=$(command -v python3 2>/dev/null) || return 1
+  [ "${RETAINER_INSTALL_OS:-$(uname -s)}" = Darwin ] || return 0
+  case "$found" in
+    "${RETAINER_STUB_DIR:-/usr/bin}"/*) "${RETAINER_XCODE_SELECT:-xcode-select}" -p >/dev/null 2>&1 ;;
+    *) return 0 ;;
+  esac
+}
+
+if [ "${1:-}" = "--check" ]; then
+  real_python
+  exit $?
+fi
+
+if real_python; then
+  exec python3 "$@"
+fi
+
+case "${1:-}" in
+  */session_context.py)
+    msg="retainer: python3 is missing, so retainer's protection is off. Run /retainer:install."
+    printf '{"systemMessage": "%s", "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "%s"}}\n' "$msg" "$msg"
+    ;;
+esac
+exit 0

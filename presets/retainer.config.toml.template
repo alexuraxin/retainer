@@ -1,0 +1,155 @@
+# <project>/.retainer/config.toml — the machine config of a project for retainer.
+# Read by the project-aware guard (hooks/guard_discipline.py) and by agents.
+# Copy to <project>/.retainer/config.toml and fill in for the project.
+#
+# IMPORTANT: all top-level keys and the protected array go BEFORE the [docs]/[tester] tables. In TOML a key
+# after a [table] belongs to the table (protected after [tester] would become tester.protected).
+
+# The full gate command (relative to the repository root).
+gate_command = "bash app/scripts/gate.sh"
+
+# Gate on a declared "done": what to run, and what, at the end of a turn.
+# test_layout — the shape of a test path, {stem} is substituted with the name of the changed module. If unset,
+# the engine's form is taken (tests/test_{stem}.sh), and in a project in another language nothing is found.
+# A project with several code roots lists a form per root as a ONE-LINE array; an edit takes the first form
+# that finds a test: test_layout = ["app/core/tests/test_{stem}.py", "tools/test_{stem}.py"]
+# test_command — what to run the chosen paths with; they are appended as arguments. If unset — the engine's
+# runner, if the project has one. If neither exists — the hook says no run took place.
+# lint_command — the project's lint, a second runner: run AS DECLARED, with no paths appended, on any turn
+# that edits code, inside the same time limit as the tests; red refuses the turn. The hook cannot know which
+# files a linter accepts, so the scope goes in the command itself. Unset or "" — no lint step.
+# lint_command = "app/.venv/bin/ruff check app"
+# Each value is a one-line quoted string (test_layout: or a one-line array of them). A value that does not
+# read — a bare word, a number, a multi-line value, a quote left open — is said aloud as a broken setting
+# whenever the hook needs it (test_command: when there is a test to run), not read as unset: the config is
+# read by two different parsers, and they can understand it
+# identically only on this subset. A key declared twice is read by its first
+# declaration — the format considers such a file invalid, but here it is read, and you need to know that.
+test_layout = "app/core/tests/test_{stem}.py"
+test_command = ".venv/bin/pytest -q"
+
+# MIRROR — for projects where tests are laid out as a tree by layers and the test directory carries names that
+# are not in the module name (tests/test_apps/test_<app>/test_<layer>/). The {stem} substitution cannot express such a path:
+# on a production Django project it matched 7% of modules, the mirror 87%, because tests
+# there are named by scenario, not by module.
+# test_mirror — a pair of roots "sources:tests". A module path is mapped into the test tree by the prefix
+# test_ on every segment; if there is no exact test, the nearest test directory above it is taken.
+# test_mirror set → the mirror works, test_layout is not read. Not set → all as above.
+# test_mirror_limit — how many test files a target may drag in; heavier is not taken, and the hook
+# says so with a separate reason. Without a limit an edit of <src>/__init__.py drags the whole test tree
+# in on every "done". The value is a quoted STRING, like everything above: a bare number reads as "not
+# set", and the limit would be silently replaced by the default (25).
+# test_mirror = "server:tests"
+# test_mirror_limit = "25"
+
+# The backup keys are dead: nobody reads the values, the guard has no snapshot before an edit. There is no
+# need to set them; they are removed by a separate task — together with the entry in the new-project generators.
+backup_command = ""
+backup_dir = ""
+
+# The guard's unlock key. Created ONLY by the owner in their own terminal (touch this file).
+# Valid for 30 minutes, expires by itself. Keep in .gitignore.
+unlock_file = ".retainer/unlock"
+
+# Destructive gate (optional). true → without the key irreversible commands are blocked: git reset --hard
+# / clean / branch -D / checkout . / force-push, as well as rm -rf, dd, shutdown/reboot, chmod -R.
+# A plain `git push`, a single `rm file`, `chmod +x` are NOT touched. (The legacy name `guard_git` works too.)
+guard_destructive = false
+
+# Egress gate (optional, for projects with secrets/keys). true → without the key a command is blocked
+# that READS a secret file (.env/id_rsa/*.pem/*_token/.aws/credentials…) AND sends data to an EXTERNAL host
+# (curl/wget/nc to a non-localhost). An auth header (Authorization/extraHeader/Bearer) is NOT touched — it is
+# legitimate authentication (including git push with a token). Protection against prompt-injection exfiltration.
+guard_egress = false
+
+# New-dependency gate. ON BY DEFAULT — the line may be absent altogether. Without the key a command is blocked
+# that ADDS a package with a language manager: pip / poetry / uv / npm, including global forms
+# (`npm i -g`, `pip install --user`). The registry is closed — other managers are not judged until their form
+# is met. Restoring the declared
+# (`npm ci`, `pip install -r`, `poetry install`, `uv sync`) and system managers (`brew`) are NOT
+# touched. The rule exists because a new dependency is the owner's decision, not the agent's.
+guard_dependency = true
+
+# WHAT THE GUARD PROTECTS — files whose edit WEAKENS a check. Paths from the repo root.
+# Glob (`**`) is supported. A directory protects everything inside.
+protected = [
+  "app/setup.cfg",            # per-file-ignores — the "I'll just add an ignore" loophole
+  "app/.importlinter",        # import contracts
+  "app/pyproject.toml",       # strictness of ruff and mypy
+  "app/scripts/gate.sh",      # the gate itself — a step can be silently dropped
+  "app/conftest.py",          # N+1 detector and test timeout — switched off with one line
+  "tooling_migration_plan.md",# policy: triggers, DoD, RATCHET
+  ".retainer/**",              # the guard's own config, PROJECT.md, instructions
+  ".githooks/**",             # versioned hooks: pre-push=gate, post-commit=project additions
+  ".git/hooks/**",            # active hooks
+  ".gitea/**",                # CI: gate.yml
+  # If the project has its own CLAUDE.md / AGENTS.md — add them here.
+]
+
+# Publishing the showcase with ONE command (bin/retainer-publish.sh). Optional — set it if the project
+# is published to an external mirror. Empty → publish is unavailable. Flat keys go BEFORE the tables below.
+# public_remote      = "https://github.com/<owner>/<repo>.git"  # WHERE to publish (required for publish)
+# github_token_path  = "~/.config/retainer/github_token"        # push token (https; default — global config)
+# publish_mirror_dir = "~/.cache/retainer/publish/<repo>"       # working clone of the mirror (default — auto by remote)
+
+# RIGOR regulators — on top of the fixed strict baseline (ADR-0002), they do NOT lower it.
+# The floor of the enforcement toggles = "check enabled"; off returns to the base behavior, not lower.
+# Read by gate.sh itself (a bash section parser). Changing flags is under the guard (file protected → key).
+[rigor]
+hooks_check        = true          # the gate fails if core.hooksPath != .githooks (skipped in CI); false = opting out of .githooks, the kit check does not require it
+guard_registration = true          # the guard is registered as a hook (skipped in CI; graceful without the engine)
+secret_scan        = "basic"       # basic (narrow prefixes AKIA/ghp_/xox/JWT/PEM) | thorough (+ generic secret=…) | false
+req_trace          = "basic"       # basic (advisory) | thorough (fails) | false — tracing req:ID ↔ .retainer/requirements.md
+doc_links          = true          # paths named in instructions must exist: a dead link teaches the agent untruth
+agent_canon        = true          # a cycle role does not exist in two copies at once (otherwise which one is called is a guess)
+protected_copy     = true          # no copy of a protected file under another name (a copy is edited freely, yet reads as rules)
+bypass_alert       = true          # the same bypass of the guard is not repeated a threshold number of times (silent until repeated)
+hot_context        = true          # mandatory reading is not bloated and holds no reports of what is done instead of rules
+remote_creds       = true          # the remote repository address has no embedded credentials
+skills_catalog     = true          # the skills catalog in the docs is built from live SKILL.md files, not written by hand
+dependency_check   = true          # what the dependency manifest names is in the lock file
+deny_sync          = true          # the guard's protected list and the harness deny have not drifted apart
+doc_claims         = true          # a marked claim of a document is confirmed by a command
+runner_labels      = true          # all CI jobs call one runner (otherwise a job hangs in the queue silently)
+complexity_trace   = true          # a new component carries a complexity decision line (an invisible decision equals one not made)
+prose_lang         = false         # DECLARATION of the code prose language: true — Latin script in docstrings, comments, names; false — the project writes prose otherwise
+prototype_debt     = true          # a prototype marker carries a task number (otherwise the debt is declared and there is nowhere to read what was agreed)
+glossary_terms     = false         # checking terms against the project glossary: enabled by a project decision — on a tree with a live glossary it goes red on already existing broken links
+practices_form     = true          # a practice rule the diff touched carries its address (Sample: <file>:<line>) and date (Distilled: <date>); silent where there is no .retainer/practices.md
+django_extras      = false         # djangofmt + manage.py check + makemigrations --check + lintmigrations + services-purity
+js_gate            = false          # node --check + biome lint + node:test (for JS/frontend projects)
+
+# CI runner: the label by which jobs ask for a runner. Declared ONCE — the gate step checks all
+# of the project's workflows against it, and swapping the label in one of them stops being invisible.
+[ci]
+runner_label = "self-hosted"
+
+# A mandatory seam the project deliberately does NOT have. The key is the hook name, the value is the REASON: the check
+# against the kit prints it and does not count such a seam as a mismatch. An empty value does not work — without
+# a reason "not required" is indistinguishable from a forgotten hook. An entry about a seam that nobody just got round to
+# setting up is a way to silence the check, not a decision.
+# [hooks]
+# pre-commit = "the project has no fast linters, and a dummy hook would lie about a check at commit"
+
+# Documents agents read instead of hardcode (policy, epic registry, as-built architecture).
+[docs]
+regulations = "tooling_migration_plan.md"   # discipline policy: triggers, DoD, RATCHET
+project_context = ".retainer/PROJECT.md"      # architecture/model/pitfalls (for agents)
+architecture = "architecture.md"             # FACT: stack, ERD, routes, formulas
+backlog = "backlog.md"                       # registry of epics/statuses
+# Domain glossary: the `glossary_terms` check looks for it here, and without the key — in the usual places
+# (.retainer/GLOSSARY.md, docs/glossary.md, docs/GLOSSARY.md, docs/pages/project/glossary.rst).
+# A non-standard name without this key means "nothing to check against": the step is silent, and the project thinks it
+# works. A declared but not found path is a refusal, not a search in the usual places.
+# glossary = "docs/words.md"
+
+# Use-case layout: by these path patterns the use-case registry is built, from which the plan role
+# leads its cases. Without the key two common layouts are taken — `*/logic/usecases/*.py` and `*/usecases/*.py`;
+# a project with another layout otherwise gets "nothing to collect" with a full tree of use cases. The key is
+# read from any section — uncomment the line where it suits you:
+# usecase_globs = ["*/application/use_cases/*.py"]
+
+# Browser tester.
+[tester]
+python = "python3"                           # an interpreter with Playwright installed
+base_url = "http://127.0.0.1:8000"

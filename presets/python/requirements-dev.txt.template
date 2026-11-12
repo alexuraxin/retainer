@@ -1,0 +1,30 @@
+# Strict dev tooling of the gate. Installed into the venv:  pip install -r requirements-dev.txt
+# Pins are compatible (~=): patches/minors are pulled automatically, a breaking major is deliberate + goes to the debt journal.
+# ⛔ Under the guard: weakening the set (removing a tool) goes through the owner's key.
+
+ruff~=0.15.0                     # format + lint (rule set — in pyproject); a 0.x minor breaks — narrow pin
+flake8~=7.3                      # host for WPS
+wemake-python-styleguide~=1.6    # WPS — a strict style baseline (pins flake8/pycodestyle tightly itself)
+mypy~=1.20                       # types (strict = true)
+codespell~=2.4                   # spelling in code/strings
+dotenv-linter~=0.7                # environment variable template against the actual file
+deptry~=0.21                      # a dependency is declared and used (both directions)
+yamllint~=1.35                    # CI and config yamls parse
+import-linter~=2.13              # import contracts (command lint-imports)
+pytest~=8.4                      # tests
+pytest-cov~=6.3                  # coverage (--cov-fail-under=100)
+pytest-randomly~=4.1             # random test order — exposes coupling and state leakage between tests
+pytest-timeout~=2.4              # baseline test timeout (pyproject); a hung test goes red instead of hanging to the CI limit
+coverage~=7.15                   # coverage engine
+
+# The Django module adds (see presets/django/README.md):
+#   django-stubs~=5.1            — types for mypy strict
+#   pytest-django~=4.9           — running Django tests and --fail-on-template-vars
+#   django-zeal~=1.0             — N+1 query detector (fails on lazy reloading)
+#   django-test-migrations~=1.5  — migration test where the shape of accumulated data matters
+# Subject-conditional — installed when the project gets the subject, and each needs its own gate
+# step: a tool nobody runs gives a false sense of being checked.
+#   deptry         — a declared dependency is unused / a used one is not declared
+#   typos          — typos in NAMES (codespell catches words in text and strings)
+#   sqlfluff       — handwritten SQL appeared
+#   dotenv-linter  — a .env / environment template appeared

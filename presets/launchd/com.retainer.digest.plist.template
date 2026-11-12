@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- retainer: discipline digest on a schedule. The digest is READ-ONLY — it changes nothing,
+     so the service is safe: its only effect is a FILE trail showing that the loop
+     is alive.
+     Weekly frequency: more often — it becomes noise and repeats the fate of the sweep journal that nobody
+     read; less often — it stops being a loop.
+     Substitute __RETAINER_HOME__/__HOME__, put it at
+       ~/Library/LaunchAgents/com.retainer.digest.plist, then:
+       launchctl load  ~/Library/LaunchAgents/com.retainer.digest.plist
+       launchctl unload ~/Library/LaunchAgents/com.retainer.digest.plist   # turn off
+     Trail: __HOME__/.cache/retainer/digest.log — appended on every firing. An empty file after a
+     week means the service did not load, not that there were no incidents. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.retainer.digest</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__RETAINER_HOME__/bin/retainer-digest.sh</string>
+  </array>
+  <!-- Sunday, 10 am: the digest is looked at during grooming, not in the thick of work -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key>
+    <integer>0</integer>
+    <key>Hour</key>
+    <integer>10</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>__HOME__/.cache/retainer/digest.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/.cache/retainer/digest.log</string>
+  <!-- RunAtLoad is NOT set: loading the service is not a weekly event, and the first trail should be
+       the result of the schedule, not a side effect of installation. The first run is done by hand —
+       the command is in docs/HOW-IT-WORKS.md. -->
+</dict>
+</plist>

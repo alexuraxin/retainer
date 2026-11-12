@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 140" width="560" height="140" role="img" aria-label="Retainer: ticket, plan, code, merge gate, done">
+  <style>
+    :root { --ink:#16181d; --paper:#ffffff; --mute:#636a75; --ok:#3dba6a; --no:#e5484d; --card:#f6f7f9; }
+    @media (prefers-color-scheme: dark) { :root { --ink:#e6e8ec; --paper:#0d1117; --mute:#9aa1ab; --card:#161b22; } }
+    .bg { fill: var(--paper); }
+    .ln { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .ic { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .node { fill: var(--paper); stroke: var(--ink); stroke-width: 5; }
+    .card { fill: var(--card); stroke: var(--ink); stroke-width: 3; }
+    .lbl { font: 600 16px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--ink); text-anchor: middle; }
+    .ttl { font: 700 17px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--ink); }
+    .knock { paint-order: stroke; stroke: var(--paper); stroke-width: 10px; stroke-linejoin: round; }
+    .sub { font: 400 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--mute); text-anchor: middle; }
+    .ret { fill: none; stroke: var(--mute); stroke-width: 3; stroke-dasharray: 2 8; stroke-linecap: round; }
+    .retlbl { font: 500 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--mute); text-anchor: middle; }
+    .mk { fill: none; stroke: var(--mute); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="mk" d="M1 1 L9 5 L1 9"/>
+    </marker>
+  </defs>
+  
+  <path class="ln" d="M60 84 H500"/>
+  <circle class="node" cx="60" cy="84" r="36"/>
+  <g class="ic" transform="translate(60 84) scale(0.90)"><path d="M-20 -14 H20 V-5 A5 5 0 0 0 20 5 V14 H-20 V5 A5 5 0 0 0 -20 -5 Z M-6 -11 V-7 M-6 -2 V2 M-6 7 V11"/></g>
+  <circle class="node" cx="170" cy="84" r="36"/>
+  <g class="ic" transform="translate(170 84) scale(0.90)"><rect x="-15" y="-19" width="30" height="38" rx="3"/><path d="M-6 -19 V-23 H6 V-19 M-9 -8 L-6 -5 L-2 -10 M2 -7 H9 M-9 3 L-6 6 L-2 1 M2 4 H9 M-9 12 H9"/></g>
+  <circle class="node" cx="280" cy="84" r="36"/>
+  <g class="ic" transform="translate(280 84) scale(0.90)"><path d="M-14 -12 L-26 0 L-14 12 M14 -12 L26 0 L14 12 M4 -16 L-4 16"/></g>
+  <circle class="node" cx="390" cy="84" r="36"/>
+  <g class="ic" transform="translate(390 84) scale(0.90)"><circle cx="-8" cy="-14" r="5"/><circle cx="-8" cy="14" r="5"/><circle cx="12" cy="-4" r="5"/><path d="M-8 -9 V9 M7 -2 C-1 0 -6 3 -8 9"/></g>
+  <path class="ln" d="M352 118 C344 80 348 48 362 38 C376 28 404 28 418 38 C432 48 436 80 428 118"/>
+  <path class="ln" d="M384 32 V18 M396 32 V18"/>
+  <rect class="ln" x="374" y="8" width="32" height="10" rx="5"/>
+  <circle cx="500" cy="84" r="38" fill="var(--ok)"/>
+  <path d="M482 85 L495 98 L519 72" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# commit-msg: issue-first MECHANICALLY — a commit without an issue reference (#N) is rejected.
+# Code is born from an issue, not the other way round. Service commits (merge/revert/fixup/squash) are skipped.
+# The scaffold's bootstrap commit goes with --no-verify (an empty project has no issue yet).
+set -euo pipefail
+
+msg_file="$1"
+first_line="$(sed -n '1p' "$msg_file")"
+
+case "$first_line" in
+  Merge*|Revert*|fixup!*|squash!*|"") exit 0 ;;
+esac
+
+if ! grep -qE '(^|[^0-9A-Za-z])#[0-9]+' "$msg_file"; then
+  {
+    echo "✗ commit-msg: no issue reference (#N)."
+    echo "  issue-first: code is born from an issue. Add #<number> to the message."
+    echo "  (merge/revert/fixup are exceptions; project bootstrap only with --no-verify)."
+  } >&2
+  exit 1
+fi

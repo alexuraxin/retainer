@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- retainer conveyor — LaunchAgent. Substitute __RETAINER_HOME__/__HOME__/__INTERVAL__ and put it at
+     ~/Library/LaunchAgents/com.retainer.conveyor.plist, then:
+       launchctl load  ~/Library/LaunchAgents/com.retainer.conveyor.plist
+       launchctl unload ~/Library/LaunchAgents/com.retainer.conveyor.plist   # turn off
+     Provisional (later → retainer web settings). Inert until ~/.config/retainer/conveyor.conf is filled in.
+     ⚠ Conveyor only. To keep the CONSOLE alive too, load com.retainer.keeper; it calls
+       conveyor-poll itself; do NOT load keeper and conveyor together (double polling). -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.retainer.conveyor</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__RETAINER_HOME__/bin/conveyor-poll.sh</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>__INTERVAL__</integer>
+  <key>StandardOutPath</key>
+  <string>__HOME__/.cache/retainer/conveyor.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/.cache/retainer/conveyor.log</string>
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

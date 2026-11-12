@@ -1,0 +1,332 @@
+#!/usr/bin/env bash
+# Full quality gate — ONE command. The set of steps is held HERE, not in prose.
+# Copy to <project>/scripts/gate.sh and adapt to the project layout.
+#
+# Principle: no step is "skipped silently". Steps are declared by a registry and run through `step`,
+# which collects the outcome and carries the run on: a red discipline step does not cancel the code check.
+# Code steps go first, discipline steps after them. The summary at the end names the state of EVERY
+# declared step, including one the run never reached. `set -e` is kept: a command outside `step`
+# still fails the run, and then the trap prints the summary.
+#
+# The run itself — `step`, the summary, traps, the [rigor] regulators — comes from the engine as a frame. Only
+# what is yours stays here: how the project checks itself. A copy of the frame in every gate would mean that
+# a fix to the run never reaches the distributed projects — exactly how one red step cut off
+# the code check for years in copies taken before the fix.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."          # repo root (flat layout)
+VENV="${VENV:-.venv}"
+RUN="$VENV/bin"
+
+# The engine root is looked up BEFORE the frame: without it the gate knows neither how to run nor how to finish.
+# A missing frame is a refusal, not a quiet skip: a gate without a run would print steps and return zero.
+RETAINER_HOME="${RETAINER_HOME:-$HOME/retainer}"
+GATE_FRAME="$RETAINER_HOME/bin/retainer-gate-frame.sh"
+if [ ! -f "$GATE_FRAME" ]; then
+  # To stderr, like the frame's abort warning: a wrapper running the gate with stdout silenced
+  # would otherwise get exit 1 without a word about the cause.
+  echo "❌ gate frame not found: $GATE_FRAME" >&2
+  echo "   Update the plugin: claude plugin update retainer@retainer" >&2
+  echo "   Or point to the engine root: RETAINER_HOME=/path/to/retainer bash scripts/gate.sh" >&2
+  exit 1
+fi
+# shellcheck source=/dev/null
+. "$GATE_FRAME"
+
+# ── REGISTRY of steps: name · title, IN EXECUTION ORDER ────────────────────────────────────────
+# The code half goes first deliberately: a discipline step says nothing about code quality, and its
+# redness must not cancel linters, types and tests. The summary is built from this registry, so a step
+# the run never reached is visible as a separate state, not absent from the output. The registry and
+# the `step` calls are cross-checked by a test — a declared but never executed step is caught mechanically.
+#
+# The guard wiring check is deliberately NOT in the registry. Its block is the cut source for the adapter of foreign
+# gates: it looks for the FIRST occurrence of the regulator name, picks up the header comment and cuts to a line
+# equal to exactly `fi`. A name in the registry would come before the block and send the cut into garbage, and a call to this
+# function inside the block would travel into a foreign gate where no such function exists. The step does not decide the gate outcome:
+# it is a warning and by construction cannot turn red.
+# shellcheck disable=SC2034  # declared by the gate, read by the engine frame
+GATE_STEPS="
+fmt|format (ruff format)
+lint|lint (ruff)
+wps|WPS (flake8)
+types|types (mypy strict)
+spell|spelling
+imports|import contracts
+extras|environment, dependencies and yamls
+secret_scan|scan for hardcoded secrets
+tests|tests + coverage + N+1 detector
+django|Django rigor
+js|JS/frontend rigor
+guard_probe|rule guard (live command)
+hooks_check|versioned hooks wired in
+engine_steps|engine gate steps
+req_trace|requirement tracing req:ID
+"
+
+# ══ CODE HALF ═══════════════════════════════════════════════════════════════════════════════
+
+step fmt     "$RUN/ruff" format --check .
+# The fail-on-autofix flag is part of the principle "the gate has no auto-fitting": a tool able to
+# bring the code to expectation does not do so in the gate but goes red. Otherwise a green run means "I
+# fitted it", not "it matches".
+step lint    "$RUN/ruff" check --exit-non-zero-on-fix .
+step wps     "$RUN/flake8" .
+step types   "$RUN/mypy" .
+step spell   "$RUN/codespell" .
+step imports "$RUN/lint-imports"
+
+# R: a hardcoded secret in the CURRENT TREE/HEAD (secret_scan) — not runtime exfiltration (the
+# egress guard catches that), but a credential value in git. The logic lives in scripts/secret-scan.sh (testable — test_secret_scan;
+# git grep tree/HEAD, narrow prefixes, lock files excluded, `# retainer:allow-secret` clears a FP).
+SS="$(rigor secret_scan basic)"
+# ── Cheap, and catches what is otherwise found in production. A substep runs only where it has a
+# subject, and declares a skip out loud and separately: "no tool" and "nothing to check" are not "clean".
+step_extras() {
+  local missed=""
+  local skipped=""
+  local ran=0
+  local ENVT=""
+  for cand in config/.env.template .env.template; do
+    [ -f "$cand" ] && { ENVT="$cand"; break; }
+  done
+  if [ -n "$ENVT" ] && [ -x "$RUN/dotenv-linter" ]; then
+    echo "  E1 environment variable template"
+    ran=$((ran + 1))
+    "$RUN/dotenv-linter" "$ENVT" || return 1
+  elif [ -n "$ENVT" ]; then
+    missed="$missed dotenv-linter"
+  else
+    skipped="$skipped no-variable-template"
+  fi
+  # deptry needs a PRODUCTION specification: without a project section in the manifest or requirements.txt it
+  # refuses. requirements-dev.txt does not count as a specification out of the box — taken alone, it
+  # would call every production dependency undeclared.
+  if [ ! -x "$RUN/deptry" ]; then
+    missed="$missed deptry"
+  elif grep -q '^\[project\]' pyproject.toml 2>/dev/null || [ -f requirements.txt ]; then
+    echo "  E2 dependencies: unused and undeclared"
+    ran=$((ran + 1))
+    "$RUN/deptry" . || return 1
+  else
+    skipped="$skipped no-dependency-specification"
+  fi
+  local YL=""
+  [ -x "$RUN/yamllint" ] && YL="$RUN/yamllint"
+  [ -n "$YL" ] || { command -v yamllint >/dev/null 2>&1 && YL=yamllint; }
+  # Targets are the PROJECT's yaml directories. Over the whole tree the linter walks into the environment and foreign files and
+  # does not read `.gitignore`: on dependencies the step goes red.
+  local YDIRS=""
+  for cand in .gitea .github config; do
+    [ -d "$cand" ] && YDIRS="$YDIRS $cand"
+  done
+  if [ -z "$YL" ]; then
+    missed="$missed yamllint"
+  elif [ -n "$YDIRS" ]; then
+    echo "  E3 project yamls:$YDIRS"
+    ran=$((ran + 1))
+    # shellcheck disable=SC2086  # word splitting is intentional here: this is a list of directories
+    "$YL" -s $YDIRS || return 1
+  else
+    skipped="$skipped no-project-yamls"
+  fi
+  if [ -x "$RUN/pip" ]; then
+    echo "  E4 integrity of installed dependencies"
+    ran=$((ran + 1))
+    "$RUN/pip" check || return 1
+  else
+    missed="$missed pip"
+  fi
+  [ -z "$missed" ] || echo "  (not installed, class not checked:$missed)"
+  [ -z "$skipped" ] || echo "  (no subject, nothing to check:$skipped)"
+  # With no substeps run, the step needs a "nothing to check" mark in the summary, not a tick: otherwise the
+  # reader reads "clean" where there was no check.
+  [ "$ran" -gt 0 ] || GATE_SKIP=1
+}
+step extras step_extras
+
+step_secret_scan() {
+  if [ -f scripts/secret-scan.sh ]; then
+    bash scripts/secret-scan.sh . "$SS"
+  else
+    # LOUD fail-closed (not graceful like the advisory req_trace): a security control declared on but not running.
+    echo "✗ secret_scan is enabled ($SS), but scripts/secret-scan.sh is missing — the control is not running."
+    echo "  Install it from presets/python/ (fail-closed: a security control does not stay silent)."
+    return 1
+  fi
+}
+if [ "$SS" != "false" ]; then step secret_scan step_secret_scan; else step_off secret_scan; fi
+
+step tests "$RUN/pytest" -q
+
+# ── Django rigor (django_extras) — executable steps. We look for the tools, fail loudly. ──
+# Inside the block every command carries `|| return 1`: under `if` a tripped errexit does not abort the function,
+# and without an explicit return a failed check would leak into a green step outcome.
+step_django() {
+  # DO NOT export DJANGO_SETTINGS_MODULE empty (an empty string ≠ unset: manage.py setdefault will not override it).
+  # The project sets it itself (manage.py/settings) or via env. Export only if already set.
+  if [ -n "${DJANGO_SETTINGS_MODULE:-}" ]; then export DJANGO_SETTINGS_MODULE; fi
+  echo "  D1 template format (djangofmt via copy+diff — it has no --check)"
+  local TDIR=""; for d in core/templates templates app/templates; do [ -d "$d" ] && TDIR="$d" && break; done
+  if [ -n "$TDIR" ]; then
+    [ -x "$RUN/djangofmt" ] || { echo "✗ djangofmt is not installed (pip install djangofmt)"; return 1; }
+    # A return is required on both commands: under `if` errexit is off, and an empty $tmp after
+    # a failed mktemp would turn the next line into a copy to the filesystem root.
+    local tmp; tmp="$(mktemp -d)" || return 1
+    cp -R "$TDIR" "$tmp/" || { rm -rf "$tmp"; return 1; }
+    "$RUN/djangofmt" --line-length 100 "$tmp/$(basename "$TDIR")" >/dev/null \
+      || { rm -rf "$tmp"; echo "✗ djangofmt failed (parse error in a template?)"; return 1; }
+    if ! diff -rq "$TDIR" "$tmp/$(basename "$TDIR")" >/dev/null; then
+      echo "✗ templates are not formatted: $RUN/djangofmt --line-length 100 $TDIR"; rm -rf "$tmp"; return 1
+    fi
+    rm -rf "$tmp"
+  else
+    echo "  (templates directory not found — skipping)"
+  fi
+  echo "  D2 manage.py check (--fail-level WARNING)"
+  [ -f manage.py ] || { echo "✗ manage.py not found in the root"; return 1; }
+  "$RUN/python" manage.py check --fail-level WARNING || return 1
+  echo "  D3 migrations (none forgotten + backward compatibility)"
+  "$RUN/python" manage.py makemigrations --check --dry-run || return 1
+  if "$RUN/python" -c 'import django_migration_linter' 2>/dev/null; then
+    "$RUN/python" manage.py lintmigrations || return 1
+  else
+    echo "  (django-migration-linter is not installed — backward compatibility not checked)"
+  fi
+  echo "  D4 services-purity (the calculation layer does not pull in Django web)"
+  # import-linter does not see the django.http/shortcuts/urls subpackages — grep closes the hole mechanically.
+  # Capture into a variable (not `| grep -q`: pipefail+SIGPIPE would give fail-OPEN — the check silently skipped).
+  local svc hits
+  svc="$(git ls-files '*/services/*.py' 'services/*.py' 2>/dev/null || true)"
+  if [ -n "$svc" ]; then
+    hits="$(printf '%s\n' "$svc" | xargs grep -nE 'from django\.(http|shortcuts|urls)|import django\.(http|shortcuts|urls)' 2>/dev/null || true)"
+    if [ -n "$hits" ]; then
+      echo "✗ the services layer pulls in Django web (http/shortcuts/urls) — logic moved into the wrong layer:"
+      echo "$hits"; return 1
+    fi
+  fi
+}
+if [ "$(rigor django_extras false)" = "true" ]; then step django step_django; else step_off django; fi
+
+# ── JS/frontend rigor (js_gate) — node/biome are not on PATH of a non-interactive shell (nvm), look explicitly, fail loudly. ──
+step_js() {
+  echo "  J1 JS syntax (node --check)"
+  # NODE and BIOME are deliberately NOT local: they are set by an outside environment variable, and `local` in bash
+  # wipes the outer value before the default is substituted.
+  local js_files js test_js
+  NODE="${NODE:-$(command -v node || true)}"
+  [ -z "$NODE" ] && NODE="$(ls -d "$HOME"/.nvm/versions/node/*/bin/node 2>/dev/null | tail -1 || true)"
+  if [ -z "$NODE" ] || [ ! -x "$NODE" ]; then
+    echo "✗ node not found — JS not checked. Specify: NODE=/path/to/node bash scripts/gate.sh"; return 1
+  fi
+  js_files="$(git ls-files '*.js' | grep -vE 'vendor/|node_modules/|\.min\.js$' || true)"
+  for js in $js_files; do "$NODE" --check "$js" || return 1; done
+  echo "  J2 JS linter (biome)"
+  BIOME="${BIOME:-$(command -v biome || true)}"; [ -z "$BIOME" ] && BIOME="$(dirname "$NODE")/biome"
+  if [ ! -f "$BIOME" ]; then echo "✗ biome not found (npm install -g @biomejs/biome, or BIOME=/path)"; return 1; fi
+  "$NODE" "$BIOME" lint --max-diagnostics=200 . || return 1    # biome is a JS wrapper with a node shebang; call it THROUGH node
+  test_js="$(git ls-files '*.test.js' | grep -vE 'node_modules/' || true)"
+  if [ -n "$test_js" ]; then
+    echo "  J3 island unit tests (node:test)"
+    "$NODE" --test $test_js || return 1
+  fi
+}
+if [ "$(rigor js_gate false)" = "true" ]; then step js step_js; else step_off js; fi
+
+# ══ DISCIPLINE HALF ═══════════════════════════════════════════════════════════════════════════
+# Below are steps about policy, not about code. Each turns the gate red, but none cancels anything any more.
+
+# We actually run into the guard with a destructive command and expect a BLOCK: exactly that is what the probe feeds it.
+# Unlocked by the owner → the probe skips itself. RETAINER_HOME is set above, before the frame is sourced:
+# without the engine the gate does not start at all, so there is no "no engine" branch here — it would be unreachable.
+step_guard_probe() {
+  if [ -f "$RETAINER_HOME/hooks/selfcheck_guard.py" ]; then
+    python3 "$RETAINER_HOME/hooks/selfcheck_guard.py" \
+      || { echo "✗ the discipline guard does not block a destructive act"; return 1; }
+  else
+    # The frame exists in this tree (the gate does not start without it), but the probe does not — the rollout is incomplete.
+    # This is "nothing to check with", not a failure: the state is declared out loud and shown separately in the summary.
+    echo "  (no hooks/selfcheck_guard.py in $RETAINER_HOME — rollout incomplete, update the plugin)"
+    # shellcheck disable=SC2034  # declared by the gate, read by the engine frame
+    GATE_SKIP=1
+  fi
+}
+step guard_probe step_guard_probe
+
+# R: hooks are really wired in (rigor hooks_check). Skipped in CI (there is a fresh checkout without core.hooksPath,
+# CI itself runs the gate). The toggle's floor is "check enabled"; off = the kit's current behavior, not lower.
+step_hooks_check() {
+  local hp; hp="$(git config --get core.hooksPath 2>/dev/null || true)"
+  [ "$hp" = ".githooks" ] || {
+    echo "✗ core.hooksPath='${hp:-<unset>}' != .githooks — pre-push will not fire."
+    echo "  Wire it in: git config core.hooksPath .githooks"; return 1
+  }
+}
+if [ "$(rigor hooks_check true)" != "true" ]; then
+  step_off hooks_check
+elif [ -n "$IS_CI" ]; then
+  step_ci hooks_check
+else
+  step hooks_check step_hooks_check
+fi
+
+# R: the guard is REGISTERED as a hook (rigor guard_registration). The probe (step "rule guard")
+# proves the guard BLOCKS; this step proves it is LOADED at all. Skipped in CI. Does NOT fail the gate
+# (a warning): otherwise the first `retainer new` fails for everyone who has not wired in the engine yet.
+#
+# The check itself lives IN THE ENGINE, not here: where exactly the guard is wired is the engine's question, and it
+# has changed (settings.json → the plugin's hooks.json). A project gate must not know the wiring format,
+# otherwise every move requires a manual edit of gate.sh in EVERY project.
+if [ "$(rigor guard_registration true)" = "true" ] && [ -z "$IS_CI" ]; then
+  echo "▶ R: guard registered (the engine carries the check)"
+  WIRING="$RETAINER_HOME/bin/guard-wiring-check.sh"
+  if [ -f "$WIRING" ]; then
+    # Codes: 0 wired · 1 no wiring · 2 engine not connected · 3 doubled. All are warnings.
+    bash "$WIRING" || true
+  else
+    echo "  (no bin/guard-wiring-check.sh in $RETAINER_HOME — update the plugin; skipping)"
+  fi
+fi
+# The mark is OUTSIDE the block: inside it would travel into a foreign gate where this variable does not exist. The summary line
+# is needed so the step count in the run and in the summary matches, and the warning about an unwired guard
+# is not lost between them.
+# shellcheck disable=SC2034  # declared by the gate, read by the engine frame
+if [ "$(rigor guard_registration true)" = "true" ] && [ -z "$IS_CI" ]; then GATE_WIRING=1; fi
+
+# R: the ENGINE gate steps — in one line. The set of steps and their regulators live IN THE ENGINE, not here:
+# a project gate is a copy of the template taken at some point, and every new engine step would otherwise require
+# a manual edit of gate.sh in EVERY project. The measurement behind this: five steps added
+# in one wave ran in ZERO of three projects — written, covered by tests, merged, and not working.
+# Currently included: dead links in instructions, the canon of cycle roles, copies of protected files,
+# repeated guard stops, the volume of mandatory reading. Each can be switched off separately in [rigor].
+step_engine_steps() {
+  local STEPS_RUNNER="$RETAINER_HOME/bin/retainer-gate-steps.sh"
+  if [ -f "$STEPS_RUNNER" ]; then
+    bash "$STEPS_RUNNER" .
+  else
+    # The frame exists, the step runner does not — the rollout is incomplete. The state is declared out loud and lands
+    # in the summary on a separate line: "nothing to check with" and "passed" are different words there.
+    echo "  (no bin/retainer-gate-steps.sh in $RETAINER_HOME — rollout incomplete, update the plugin)"
+    # shellcheck disable=SC2034  # declared by the gate, read by the engine frame
+    GATE_SKIP=1
+  fi
+}
+step engine_steps step_engine_steps
+
+# R: requirement tracing req:ID + spec-drift detection (req_trace). Requirements — .retainer/requirements.md
+# (R-<n>: text, the owner edits with a key), tags `req: R-<n>` in code/tests. basic=advisory, thorough=fails.
+# The logic is richer than secret_scan (manifest parsing + path class + orphans) → moved to scripts/req-trace.sh
+# (testable, covered by CI). basic|thorough|false.
+RT="$(rigor req_trace basic)"
+step_req_trace() {
+  if [ -f scripts/req-trace.sh ]; then
+    bash scripts/req-trace.sh . "$RT"
+  else
+    echo "  (no scripts/req-trace.sh — install it from presets/python; nothing to trace with)"
+    # shellcheck disable=SC2034  # declared by the gate, read by the engine frame
+    GATE_SKIP=1
+  fi
+}
+if [ "$RT" != "false" ]; then step req_trace step_req_trace; else step_off req_trace; fi
+
+# ══ OUTCOME ═══════════════════════════════════════════════════════════════════════════════════
+gate_finish              # summary and verdict: the code of the FIRST failed step, the same one goes into the incident journal

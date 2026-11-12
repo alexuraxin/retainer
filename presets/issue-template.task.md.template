@@ -1,0 +1,60 @@
+---
+name: Task
+about: Canonical task skeleton
+title: ""
+labels: []
+---
+
+## Fact
+
+<!-- What is observed. One or two sentences, without retelling the backstory. -->
+
+## Evidence
+
+<!-- What confirms it: `file:line` addresses, run output, a measurement. Not "looks like", but what
+     exactly is seen. If there is no measurement — say so, do not invent. -->
+
+## What to do
+
+<!-- The decision. If there is a fork — name the options and the chosen default, so the choice is visible and can
+     be reversed, and does not dissolve into the code. -->
+
+## Plan by steps
+
+<!-- The order of work by steps, each with its own address in the code. Without it the task cannot be taken into autonomous
+     work: the executor will start with reconnaissance instead of the job. Name a fork inside a step together with
+     the chosen default — so the choice can be reversed, not dug out. -->
+
+## Boundaries — what NOT to do
+
+<!-- What is NOT in scope and why: other people's protected files, neighboring tasks, tempting
+     incidental edits. An unwritten boundary is a boundary that will be moved silently. -->
+
+## Acceptance Criteria
+
+<!-- As checkboxes, machine-verifiable. Each item is what a failing test is written for.
+     "Works better" is not a criterion. -->
+
+- [ ]
+- [ ]
+- [ ] Mutant: removing the mechanism turns the corpus red
+
+## Files:
+
+<!-- Exact paths. Mark protected ones: `(protected — by owner's key)`. The block exists so that two
+     tasks that MAY run at the same time do not collide in one place. It bounds PARALLEL work, not
+     this task: one task takes as many files as it needs to leave the system consistent.
+     Editing part of a shared file, name the place: lines `docs/guide.md:120-140` or a section
+     `docs/guide.md#setup`, one place per mention. A bare path claims the whole file. -->
+
+-
+
+## Sample
+
+<!-- For every NEW kind of code — the address of a file whose form the artifact repeats:
+     `Sample: <file>` (may be `<file>:<line>` or `<file>#<anchor>`). No new kinds — say so:
+     `No new kinds of code`. Silence here is indistinguishable from an omission, and review has nothing to check
+     the implementation against. A task that CHANGES the form of a kind names the sample and says how the new form
+     differs and why — then a deviation from the sample is not a finding but the execution of the plan. -->
+
+-

@@ -1,0 +1,18 @@
+# <PROJECT> error journal — {bug, root cause, grounding}
+
+A bug is caught (review / plan-checker / gate / production) → a row goes here. The learning loop closes here: we catch AND
+learn systematically, not only in commit messages.
+
+**Anti-poisoning.** A lesson is GROUNDED in a fact, not a guess about the cause (reflection memory without a fact poisons itself):
+
+- **Gold standard** — the project's red regression test that fails EXACTLY on this bug.
+- **Fallback** — the honest marker `review` (caught by review, no test YET): a provenance label and deferred debt,
+  NOT equivalent to a test. A candidate for later grounding.
+
+Never fabricate a reference to a test that does not exist — that is a disguised narrative (poison), worse than an honest `review`.
+
+Example of filling in (placeholder, NOT a real entry):
+`| 1 | 2026-01-15 | bug symptom | exact root cause | tests/test_feature.sh | #NN |`
+
+| # | Date | Bug (symptom) | Root cause | Grounding | Found by |
+|---|------|---------------|------------|-----------|----------|

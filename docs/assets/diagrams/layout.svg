@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" width="960" height="420" role="img" aria-label="The engine is one plugin for all projects; each project adds its config and PROJECT.md">
+  <style>
+    :root { --ink:#16181d; --paper:#ffffff; --mute:#636a75; --ok:#3dba6a; --no:#e5484d; --card:#f6f7f9; }
+    @media (prefers-color-scheme: dark) { :root { --ink:#e6e8ec; --paper:#0d1117; --mute:#9aa1ab; --card:#161b22; } }
+    .bg { fill: var(--paper); }
+    .ln { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .ic { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .node { fill: var(--paper); stroke: var(--ink); stroke-width: 5; }
+    .card { fill: var(--card); stroke: var(--ink); stroke-width: 3; }
+    .lbl { font: 600 16px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--ink); text-anchor: middle; }
+    .ttl { font: 700 17px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--ink); }
+    .knock { paint-order: stroke; stroke: var(--paper); stroke-width: 10px; stroke-linejoin: round; }
+    .sub { font: 400 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--mute); text-anchor: middle; }
+    .ret { fill: none; stroke: var(--mute); stroke-width: 3; stroke-dasharray: 2 8; stroke-linecap: round; }
+    .retlbl { font: 500 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--mute); text-anchor: middle; }
+    .mk { fill: none; stroke: var(--mute); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="mk" d="M1 1 L9 5 L1 9"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="960" height="420" rx="24"/>
+  <rect class="card" x="24" y="24" width="396" height="372" rx="20"/>
+  <text class="ttl" x="48" y="62">Retainer plugin — one for all projects</text>
+  <rect class="card" x="540" y="24" width="396" height="372" rx="20"/>
+  <text class="ttl" x="564" y="62">Your project</text>
+  <path class="ln" d="M430 210 H528" marker-end="url(#ah)"/>
+  <text class="retlbl" x="480" y="178">installed</text>
+  <text class="retlbl" x="480" y="194">as a plugin</text>
+  <circle class="node" cx="80" cy="118" r="30"/>
+  <g class="ic" transform="translate(80 118) scale(0.75)"><circle cx="-7" cy="-8" r="7"/><circle cx="10" cy="-6" r="5"/><path d="M-20 18 C-20 6 6 6 6 18 M8 6 C14 5 20 9 20 16"/></g>
+  <text class="lbl" x="128" y="115" style="text-anchor:start">agents/</text>
+  <text class="sub" x="128" y="134" style="text-anchor:start">cycle roles</text>
+  <circle class="node" cx="80" cy="194" r="30"/>
+  <g class="ic" transform="translate(80 194) scale(0.75)"><path d="M0 -12 C-6 -18 -14 -18 -20 -16 V16 C-14 14 -6 14 0 20 C6 14 14 14 20 16 V-16 C14 -18 6 -18 0 -12 Z M0 -12 V20"/></g>
+  <text class="lbl" x="128" y="191" style="text-anchor:start">skills/</text>
+  <text class="sub" x="128" y="210" style="text-anchor:start">techniques</text>
+  <circle class="node" cx="80" cy="270" r="30"/>
+  <g class="ic" transform="translate(80 270) scale(0.75)"><path d="M0 -24 L20 -16 V0 C20 14 10 22 0 26 C-10 22 -20 14 -20 0 V-16 Z"/><path d="M-9 0 L-2 7 L10 -7"/></g>
+  <text class="lbl" x="128" y="267" style="text-anchor:start">hooks/</text>
+  <text class="sub" x="128" y="286" style="text-anchor:start">guard, “done” gate</text>
+  <circle class="node" cx="80" cy="346" r="30"/>
+  <g class="ic" transform="translate(80 346) scale(0.75)"><path d="M-14 -18 V18 M0 -18 V18 M14 -18 V18"/><circle cx="-14" cy="6" r="5"/><circle cx="0" cy="-8" r="5"/><circle cx="14" cy="10" r="5"/></g>
+  <text class="lbl" x="128" y="343" style="text-anchor:start">presets/</text>
+  <text class="sub" x="128" y="362" style="text-anchor:start">gate, CI, templates</text>
+  <circle class="node" cx="596" cy="156" r="30"/>
+  <g class="ic" transform="translate(596 156) scale(0.75)"><circle r="7"/><path d="M0 -20 V-14 M0 14 V20 M-20 0 H-14 M14 0 H20 M-14 -14 L-10 -10 M10 10 L14 14 M14 -14 L10 -10 M-10 10 L-14 14"/></g>
+  <text class="lbl" x="644" y="153" style="text-anchor:start">.retainer/config.toml</text>
+  <text class="sub" x="644" y="172" style="text-anchor:start">what to protect, the gate · read by hooks</text>
+  <circle class="node" cx="596" cy="276" r="30"/>
+  <g class="ic" transform="translate(596 276) scale(0.75)"><path d="M-13 -20 H6 L14 -12 V20 H-13 Z M6 -20 V-12 H14 M-6 -2 H7 M-6 6 H7 M-6 13 H2"/></g>
+  <text class="lbl" x="644" y="273" style="text-anchor:start">.retainer/PROJECT.md</text>
+  <text class="sub" x="644" y="292" style="text-anchor:start">architecture, pitfalls · read by agents</text>
+</svg>

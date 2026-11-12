@@ -1,0 +1,18 @@
+{
+  "name": "retainer",
+  "description": "Local marketplace: discipline engine for agent development (cycle, gate, guard, graph, Python toolchain)",
+  "owner": {
+    "name": "Retainer"
+  },
+  "plugins": [
+    {
+      "name": "retainer",
+      "description": "Portable discipline engine: task cycle, gate, project-aware guard, graph-first, Python presets",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "Retainer"
+      }
+    }
+  ]
+}
